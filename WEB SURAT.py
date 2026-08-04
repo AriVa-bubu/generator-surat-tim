@@ -20,14 +20,12 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
-    /* Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Background & Main Layout Padding */
     .main .block-container {
         padding-top: 2rem;
         padding-bottom: 3rem;
@@ -115,29 +113,12 @@ st.markdown("""
         align-items: center;
         gap: 6px;
     }
-    .badge-danger {
-        background-color: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
     .badge-success {
         background-color: rgba(34, 197, 94, 0.15);
         color: #4ade80;
         border: 1px solid rgba(34, 197, 94, 0.3);
     }
 
-    /* Info Callout Box */
-    .info-box {
-        background-color: rgba(2, 132, 199, 0.1);
-        border-left: 4px solid #0284c7;
-        padding: 14px 18px;
-        border-radius: 0 10px 10px 0;
-        color: #e2e8f0;
-        font-size: 0.95rem;
-        margin-bottom: 18px;
-    }
-
-    /* Streamlit Components Customization */
     div[data-testid="stFileUploader"] {
         background-color: #0f172a;
         border: 1px dashed #475569;
@@ -148,7 +129,6 @@ st.markdown("""
         border-color: #38bdf8;
     }
 
-    /* Custom Buttons */
     .stButton > button {
         border-radius: 10px !important;
         font-weight: 700 !important;
@@ -156,7 +136,6 @@ st.markdown("""
         transition: all 0.2s ease !important;
     }
 
-    /* Metric Cards */
     div[data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
         color: #38bdf8 !important;
@@ -186,8 +165,8 @@ st.markdown("""
 with st.expander("❓ **Petunjuk & Cara Penggunaan (Klik untuk Membuka)**"):
     st.markdown("""
     1. **Siapkan File Excel (`.xlsx`)**: Pastikan baris pertama berisi **Nama Kolom** (contoh: `NAMA`, `IDPEL`, `ALAMAT`, `TANGGAL`).
-    2. **Siapkan Template Word (`.docx`)**: Gunakan format tag Jinja2 dengan tanda kurung keriting ganda `{{ NAMA_KOLOM }}` di posisi yang ingin diisi otomatis.
-    3. **Tebalkan Teks di Word**: Jika ingin hasil variabel bernilai **Bold**, cukup tebalkan tag `{{ NAMA }}` di template Word Anda.
+    2. **Siapkan Template Word (`.docx`)**: Gunakan format tag Jinja2 dengan tanda kurung keriting ganda `{{ NAMA }}` atau `{{ IDPEL }}` di posisi yang ingin diisi otomatis.
+    3. **Tebalkan Teks di Word**: Jika ingin hasil variabel bernilai **Bold**, cukup tebalkan tag `{{ NAMA }}` langsung di dalam template Word Anda.
     4. **Unggah Berkas**: Masukkan kedua file pada **Langkah 1** di bawah ini.
     5. **Generate & Download**: Klik tombol buat surat lalu unduh file `.ZIP` hasil konversi.
     """)
@@ -232,9 +211,11 @@ with col2:
 # -----------------------------------------------------------------------------
 if excel_file and word_file:
     try:
+        # Membaca file excel (Secara default membaca sheet pertama)
         df = pd.read_excel(excel_file)
-        # Hapus spasi berlebih dari string
-        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        
+        # Bersihkan spasi berlebih pada nilai string (Aman untuk Pandas versi lama & baru)
+        df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x) if col.dtype == "object" else col)
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
@@ -310,7 +291,6 @@ if excel_file and word_file:
                     
                     # Nama file hasil
                     filename_val = str(row[naming_column]).strip()
-                    # Bersihkan karakter terlarang di nama file
                     clean_filename = re.sub(r'[\\/*?:"<>|]', "", filename_val)
                     file_name = f"Surat_{clean_filename}.docx"
                     
