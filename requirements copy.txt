@@ -1,6 +1,0 @@
-streamlit
-pandas
-openpyxl
-docxtpl
-qrcode
-Pillow
