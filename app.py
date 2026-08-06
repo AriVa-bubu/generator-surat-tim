@@ -17,6 +17,13 @@ st.set_page_config(
     page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide",
     initial_sidebar_state="expanded"
+    import streamlit as st
+
+st.set_page_config(
+    page_title="🏠 Beranda Utama", # <-- Ini akan mengubah nama di sidebar & tab browser
+    page_icon="⚡",
+    layout="wide"
+)
 )
 
 st.markdown("""
