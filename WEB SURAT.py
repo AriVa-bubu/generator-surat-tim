@@ -4,6 +4,9 @@ from docxtpl import DocxTemplate
 import io
 import zipfile
 import re
+import subprocess
+import tempfile
+import os
 
 # -----------------------------------------------------------------------------
 # CONFIG & PAGE SETUP
@@ -153,7 +156,7 @@ st.markdown("""
         ✉️ Generator Surat Otomatis
     </div>
     <p class="hero-subtitle">
-        Buat puluhan hingga ratusan surat resmi (.DOCX) secara otomatis dan instan dari data Excel & Template Word.
+        Buat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara otomatis dan instan dari data Excel & Template Word.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -166,7 +169,7 @@ with st.expander("❓ **Petunjuk & Cara Penggunaan (Klik untuk Membuka)**"):
     st.markdown("""
     1. **Siapkan File Excel (`.xlsx`)**: Pastikan baris pertama berisi **Nama Kolom** (contoh: `NAMA`, `IDPEL`, `ALAMAT`, `TANGGAL`).
     2. **Siapkan Template Word (`.docx`)**: Gunakan format tag Jinja2 dengan tanda kurung keriting ganda `{{ NAMA }}` atau `{{ IDPEL }}` di posisi yang ingin diisi otomatis.
-    3. **Tebalkan Teks di Word**: Jika ingin hasil variabel bernilai **Bold**, cukup tebalkan tag `{{ NAMA }}` langsung di dalam template Word Anda.
+    3. **Pilih Format Output**: Anda bisa memilih hasil keluaran berupa **DOCX (Word)** atau **PDF**.
     4. **Unggah Berkas**: Masukkan kedua file pada **Langkah 1** di bawah ini.
     5. **Generate & Download**: Klik tombol buat surat lalu unduh file `.ZIP` hasil konversi.
     """)
@@ -211,10 +214,7 @@ with col2:
 # -----------------------------------------------------------------------------
 if excel_file and word_file:
     try:
-        # Membaca file excel (Secara default membaca sheet pertama)
         df = pd.read_excel(excel_file)
-        
-        # Bersihkan spasi berlebih pada nilai string (Aman untuk Pandas versi lama & baru)
         df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x) if col.dtype == "object" else col)
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -234,7 +234,7 @@ if excel_file and word_file:
         with m_col2:
             st.metric("Jumlah Kolom", f"{len(df.columns)} Kolom")
         with m_col3:
-            st.metric("Format Target", ".DOCX (Word)")
+            st.metric("Pilihan Output", "DOCX / PDF")
 
         st.markdown("##### 📋 Pratinjau 5 Baris Data Pertama:")
         st.dataframe(df.head(), use_container_width=True)
@@ -248,18 +248,28 @@ if excel_file and word_file:
         <div class="step-card">
             <div class="step-header">
                 <div class="step-title">
-                    <span class="step-number">3</span> Proses & Unduh Berkas Surat
+                    <span class="step-number">3</span> Pengaturan & Proses Surat
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-        # Opsi penamaan file
-        naming_column = st.selectbox(
-            "Pilih Kolom Excel untuk Penamaan File Surat:",
-            options=df.columns.tolist(),
-            index=0,
-            help="Contoh: Jika memilih kolom 'NAMA', nama file akan menjadi 'Surat_SRIANTINI.docx'"
-        )
+        col_opt1, col_opt2 = st.columns(2)
+
+        with col_opt1:
+            naming_column = st.selectbox(
+                "Pilih Kolom Excel untuk Penamaan File Surat:",
+                options=df.columns.tolist(),
+                index=0,
+                help="Contoh: Jika memilih kolom 'NAMA', nama file akan menjadi 'Surat_SRIANTINI'"
+            )
+
+        with col_opt2:
+            output_format = st.radio(
+                "Pilih Format File Output di dalam ZIP:",
+                options=["DOCX (Word)", "PDF"],
+                horizontal=True,
+                help="Jika memilih PDF, file Word akan otomatis dikonversi ke PDF sebelum dikompresi."
+            )
 
         generate_btn = st.button("🚀 Buat Semua Surat Sekarang", type="primary", use_container_width=True)
 
@@ -269,43 +279,65 @@ if excel_file and word_file:
             status_text = st.empty()
             
             total_rows = len(df)
-            
+            is_pdf = "PDF" in output_format
+
             with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-                for idx, row in df.iterrows():
-                    status_text.text(f"⏳ Memproses surat {idx + 1} dari {total_rows}...")
-                    
-                    # Buat context dictionary dari row pandas
-                    context = {}
-                    for col in df.columns:
-                        val = row[col]
-                        context[str(col)] = "" if pd.isna(val) else str(val)
-                    
-                    # Render template docx
-                    doc_tpl = DocxTemplate(word_file)
-                    doc_tpl.render(context)
-                    
-                    # Simpan ke memori
-                    doc_io = io.BytesIO()
-                    doc_tpl.save(doc_io)
-                    doc_io.seek(0)
-                    
-                    # Nama file hasil
-                    filename_val = str(row[naming_column]).strip()
-                    clean_filename = re.sub(r'[\\/*?:"<>|]', "", filename_val)
-                    file_name = f"Surat_{clean_filename}.docx"
-                    
-                    zip_file.writestr(file_name, doc_io.getvalue())
-                    progress_bar.progress((idx + 1) / total_rows)
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    for idx, row in df.iterrows():
+                        status_text.text(f"⏳ Memproses surat {idx + 1} dari {total_rows} ({output_format})...")
+                        
+                        context = {}
+                        for col in df.columns:
+                            val = row[col]
+                            context[str(col)] = "" if pd.isna(val) else str(val)
+                        
+                        doc_tpl = DocxTemplate(word_file)
+                        doc_tpl.render(context)
+                        
+                        filename_val = str(row[naming_column]).strip()
+                        clean_filename = re.sub(r'[\\/*?:"<>|]', "", filename_val)
+                        
+                        if is_pdf:
+                            # Simpan sementara sebagai docx
+                            temp_docx_path = os.path.join(temp_dir, f"temp_{idx}.docx")
+                            doc_tpl.save(temp_docx_path)
+                            
+                            # Konversi docx ke pdf memakai LibreOffice
+                            cmd = [
+                                "libreoffice",
+                                "--headless",
+                                "--convert-to", "pdf",
+                                temp_docx_path,
+                                "--outdir", temp_dir
+                            ]
+                            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            
+                            generated_pdf = os.path.join(temp_dir, f"temp_{idx}.pdf")
+                            if os.path.exists(generated_pdf):
+                                with open(generated_pdf, "rb") as pdf_file:
+                                    pdf_data = pdf_file.read()
+                                file_name = f"Surat_{clean_filename}.pdf"
+                                zip_file.writestr(file_name, pdf_data)
+                                os.remove(generated_pdf)
+                            if os.path.exists(temp_docx_path):
+                                os.remove(temp_docx_path)
+                        else:
+                            doc_io = io.BytesIO()
+                            doc_tpl.save(doc_io)
+                            file_name = f"Surat_{clean_filename}.docx"
+                            zip_file.writestr(file_name, doc_io.getvalue())
+                        
+                        progress_bar.progress((idx + 1) / total_rows)
 
             status_text.empty()
             progress_bar.empty()
             
-            st.success(f"🎉 Berhasil memproses {total_rows} dokumen surat!")
+            st.success(f"🎉 Berhasil memproses {total_rows} dokumen surat ({output_format})!")
             
             st.download_button(
-                label="⬇️ Unduh Semua Surat (.ZIP)",
+                label=f"⬇️ Unduh Semua Surat dalam File ZIP ({output_format})",
                 data=zip_buffer.getvalue(),
-                file_name="Hasil_Surat_Otomatis.zip",
+                file_name=f"Hasil_Surat_{'PDF' if is_pdf else 'DOCX'}.zip",
                 mime="application/zip",
                 use_container_width=True
             )
@@ -316,5 +348,4 @@ if excel_file and word_file:
         st.error(f"Terjadi kesalahan saat membaca file: {str(e)}")
 
 else:
-    # Tampilan awal jika belum mengunggah file
     st.info("💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word** pada Langkah 1 untuk memulai.")
