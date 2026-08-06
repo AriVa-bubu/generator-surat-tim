@@ -1,7 +1,11 @@
 import streamlit as st
 import os
 import base64
+import streamlit as st
+from utils import load_custom_css  # 👈 Import fungsi
 
+st.set_page_config(page_title="PLN Multi Tools", page_icon="⚡", layout="wide")
+load_custom_css()  # 👈 Jalankan fungsi
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
