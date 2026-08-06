@@ -7,13 +7,29 @@ import re
 import subprocess
 import tempfile
 import os
+import base64
 
 # -----------------------------------------------------------------------------
-# CONFIG & PAGE SETUP
+# FUNGSI UNTUK ENCODE LOGO KE BASE64 (Supaya bisa dipasang di CSS/HTML)
+# -----------------------------------------------------------------------------
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# Tentukan lokasi logo PLN
+logo_path = "logo_pln.png"
+logo_base64 = ""
+
+if os.path.exists(logo_path):
+    logo_base64 = get_base64_of_bin_file(logo_path)
+
+# -----------------------------------------------------------------------------
+# CONFIG & PAGE SETUP (Favicon dengan Logo PLN)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="PLN - Generator Surat Otomatis",
-    page_icon="⚡",
+    page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -44,9 +60,24 @@ st.markdown("""
         margin-bottom: 24px;
         box-shadow: 0 10px 25px -5px rgba(0, 168, 232, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 24px;
     }
+    
+    .hero-logo-img {
+        width: 85px;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        background: white;
+        padding: 4px;
+    }
+
+    .hero-content {
+        flex-grow: 1;
+    }
+
     .hero-badge {
         background-color: #ffb703;
         color: #000;
@@ -59,12 +90,14 @@ st.markdown("""
         display: inline-block;
         margin-bottom: 8px;
     }
+
     .hero-title {
         font-size: 2.1rem;
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
     }
+
     .hero-subtitle {
         color: #e0f2fe;
         font-size: 0.98rem;
@@ -159,17 +192,24 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# HERO HEADER WITH PLN BRANDING
+# HERO HEADER WITH LOGO PLN & BRANDING
 # -----------------------------------------------------------------------------
-st.markdown("""
+logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="hero-logo-img" alt="PLN Logo">' if logo_base64 else '⚡'
+
+st.markdown(f"""
 <div class="hero-banner">
-    <span class="hero-badge">⚡ PLN INTERNAL SYSTEM</span>
-    <div class="hero-title">
-        Generator Surat & Arsip Otomatis
+    <div>
+        {logo_html}
     </div>
-    <p class="hero-subtitle">
-        Sistem pencetakan & pengarsipan dokumen massal otomatis berbasis data Excel dan Template Word.
-    </p>
+    <div class="hero-content">
+        <span class="hero-badge">⚡ PLN INTERNAL SYSTEM</span>
+        <div class="hero-title">
+            Generator Surat & Arsip Otomatis
+        </div>
+        <p class="hero-subtitle">
+            Sistem pencetakan & pengarsipan dokumen massal otomatis berbasis data Excel dan Template Word.
+        </p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
