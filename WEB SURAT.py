@@ -7,6 +7,7 @@ import re
 import subprocess
 import tempfile
 import os
+import datetime
 
 # -----------------------------------------------------------------------------
 # CONFIG & PAGE SETUP
@@ -35,7 +36,6 @@ st.markdown("""
         max-width: 1100px;
     }
 
-    /* Hero Banner Header */
     .hero-banner {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #0284c7 100%);
         border: 1px solid #334155;
@@ -61,7 +61,6 @@ st.markdown("""
         margin-bottom: 0;
     }
 
-    /* Step Card Container */
     .step-card {
         background-color: #1e293b;
         border: 1px solid #334155;
@@ -106,7 +105,6 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* Status Badges */
     .badge {
         padding: 6px 14px;
         border-radius: 20px;
@@ -163,15 +161,14 @@ st.markdown("""
 
 
 # -----------------------------------------------------------------------------
-# PANDUAN PENGGUNAAN (EXPANDER)
+# PANDUAN PENGGUNAAN
 # -----------------------------------------------------------------------------
 with st.expander("❓ **Petunjuk & Cara Penggunaan (Klik untuk Membuka)**"):
     st.markdown("""
     1. **Siapkan File Excel (`.xlsx`)**: Pastikan baris pertama berisi **Nama Kolom** (contoh: `NAMA`, `IDPEL`, `ALAMAT`, `TANGGAL`).
-    2. **Siapkan Template Word (`.docx`)**: Gunakan format tag Jinja2 dengan tanda kurung keriting ganda `{{ NAMA }}` atau `{{ IDPEL }}` di posisi yang ingin diisi otomatis.
-    3. **Pilih Format Output**: Anda bisa memilih hasil keluaran berupa **DOCX (Word)** atau **PDF**.
-    4. **Unggah Berkas**: Masukkan kedua file pada **Langkah 1** di bawah ini.
-    5. **Generate & Download**: Klik tombol buat surat lalu unduh file `.ZIP` hasil konversi.
+    2. **Siapkan Template Word (`.docx`)**: Gunakan format tag Jinja2 `{{ NAMA }}` di posisi yang ingin diisi otomatis.
+    3. **Unggah Berkas**: Masukkan file pada **Langkah 1**.
+    4. **Generate & Download**: Pilih opsi pembuatan Folder otomatis, klik tombol buat surat lalu unduh `.ZIP`.
     """)
 
 
@@ -192,29 +189,20 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("**📊 1. File Excel Data Pelanggan/Target**")
-    excel_file = st.file_uploader(
-        "Upload data (.xlsx, .xls)",
-        type=["xlsx", "xls"],
-        key="excel_uploader",
-        help="File berisi daftar nama, alamat, ID, dll."
-    )
+    excel_file = st.file_uploader("Upload data (.xlsx, .xls)", type=["xlsx", "xls"], key="excel_uploader")
 
 with col2:
     st.markdown("**📝 2. File Template Surat Word**")
-    word_file = st.file_uploader(
-        "Upload template (.docx)",
-        type=["docx"],
-        key="word_uploader",
-        help="Template surat dengan placeholder {{ NAMA }}, {{ IDPEL }}, dll."
-    )
+    word_file = st.file_uploader("Upload template (.docx)", type=["docx"], key="word_uploader")
 
 
 # -----------------------------------------------------------------------------
-# LANGKAH 2: PRATINJAU DATA & DETEKSI VARIABLE
+# LANGKAH 2 & 3: PROSES DATA
 # -----------------------------------------------------------------------------
 if excel_file and word_file:
     try:
         df = pd.read_excel(excel_file)
+        # Bersihkan spasi berlebih
         df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x) if col.dtype == "object" else col)
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -234,16 +222,13 @@ if excel_file and word_file:
         with m_col2:
             st.metric("Jumlah Kolom", f"{len(df.columns)} Kolom")
         with m_col3:
-            st.metric("Pilihan Output", "DOCX / PDF")
+            st.metric("Pilihan Output", "DOCX / PDF & Berfolder")
 
         st.markdown("##### 📋 Pratinjau 5 Baris Data Pertama:")
         st.dataframe(df.head(), use_container_width=True)
-
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # -----------------------------------------------------------------------------
-        # LANGKAH 3: PROSES GENERATE SURAT
-        # -----------------------------------------------------------------------------
+        # --- LANGKAH 3 ---
         st.markdown("""
         <div class="step-card">
             <div class="step-header">
@@ -253,22 +238,29 @@ if excel_file and word_file:
             </div>
         """, unsafe_allow_html=True)
 
-        col_opt1, col_opt2 = st.columns(2)
+        col_opt1, col_opt2, col_opt3 = st.columns(3)
 
         with col_opt1:
             naming_column = st.selectbox(
-                "Pilih Kolom Excel untuk Penamaan File Surat:",
+                "Pilih Kolom untuk Penamaan File Surat:",
                 options=df.columns.tolist(),
+                index=0
+            )
+            
+        with col_opt2:
+            options_folder = ["Tidak Diklasifikasi (1 Folder)"] + df.columns.tolist()
+            folder_column = st.selectbox(
+                "Kelompokkan File ke Folder Berdasarkan:",
+                options=options_folder,
                 index=0,
-                help="Contoh: Jika memilih kolom 'NAMA', nama file akan menjadi 'Surat_SRIANTINI'"
+                help="Misal: Pilih kolom 'TANGGAL'. Surat otomatis masuk ke folder tanggal tersebut di dalam ZIP."
             )
 
-        with col_opt2:
+        with col_opt3:
             output_format = st.radio(
-                "Pilih Format File Output di dalam ZIP:",
+                "Format File Output:",
                 options=["DOCX (Word)", "PDF"],
-                horizontal=True,
-                help="Jika memilih PDF, file Word akan otomatis dikonversi ke PDF sebelum dikompresi."
+                horizontal=True
             )
 
         generate_btn = st.button("🚀 Buat Semua Surat Sekarang", type="primary", use_container_width=True)
@@ -286,58 +278,75 @@ if excel_file and word_file:
                     for idx, row in df.iterrows():
                         status_text.text(f"⏳ Memproses surat {idx + 1} dari {total_rows} ({output_format})...")
                         
+                        # Siapkan variabel context untuk isi surat
                         context = {}
                         for col in df.columns:
+                            # Jika formatnya waktu/tanggal, ubah jadi string yang rapi di surat
                             val = row[col]
-                            context[str(col)] = "" if pd.isna(val) else str(val)
+                            if isinstance(val, pd.Timestamp):
+                                context[str(col)] = val.strftime("%d-%m-%Y")
+                            else:
+                                context[str(col)] = "" if pd.isna(val) else str(val)
                         
                         doc_tpl = DocxTemplate(word_file)
                         doc_tpl.render(context)
                         
+                        # 1. Tentukan Nama File Utama
                         filename_val = str(row[naming_column]).strip()
                         clean_filename = re.sub(r'[\\/*?:"<>|]', "", filename_val)
                         
+                        # 2. Tentukan Sub-Folder (Berdasarkan Tanggal / Pilihan Kolom)
+                        folder_path = ""
+                        if folder_column != "Tidak Diklasifikasi (1 Folder)":
+                            raw_folder_val = row[folder_column]
+                            
+                            # Amankan format tanggal agar tidak jadi nama folder error
+                            if isinstance(raw_folder_val, pd.Timestamp):
+                                clean_folder_name = raw_folder_val.strftime("%Y-%m-%d")
+                            else:
+                                clean_folder_name = re.sub(r'[\\/*?:"<>|]', "", str(raw_folder_val).strip())
+                            
+                            if clean_folder_name:
+                                folder_path = f"{clean_folder_name}/"
+                        
+                        # 3. Proses Simpan (DOCX atau PDF) ke dalam Folder yang sesuai di ZIP
                         if is_pdf:
-                            # Simpan sementara sebagai docx
                             temp_docx_path = os.path.join(temp_dir, f"temp_{idx}.docx")
                             doc_tpl.save(temp_docx_path)
                             
-                            # Konversi docx ke pdf memakai LibreOffice
-                            cmd = [
-                                "libreoffice",
-                                "--headless",
-                                "--convert-to", "pdf",
-                                temp_docx_path,
-                                "--outdir", temp_dir
-                            ]
+                            cmd = ["libreoffice", "--headless", "--convert-to", "pdf", temp_docx_path, "--outdir", temp_dir]
                             subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             
                             generated_pdf = os.path.join(temp_dir, f"temp_{idx}.pdf")
                             if os.path.exists(generated_pdf):
                                 with open(generated_pdf, "rb") as pdf_file:
                                     pdf_data = pdf_file.read()
-                                file_name = f"Surat_{clean_filename}.pdf"
-                                zip_file.writestr(file_name, pdf_data)
+                                
+                                # Simpan ke dalam folder (jika ada) di dalam ZIP
+                                full_zip_path = f"{folder_path}Surat_{clean_filename}.pdf"
+                                zip_file.writestr(full_zip_path, pdf_data)
                                 os.remove(generated_pdf)
                             if os.path.exists(temp_docx_path):
                                 os.remove(temp_docx_path)
                         else:
                             doc_io = io.BytesIO()
                             doc_tpl.save(doc_io)
-                            file_name = f"Surat_{clean_filename}.docx"
-                            zip_file.writestr(file_name, doc_io.getvalue())
+                            
+                            # Simpan ke dalam folder (jika ada) di dalam ZIP
+                            full_zip_path = f"{folder_path}Surat_{clean_filename}.docx"
+                            zip_file.writestr(full_zip_path, doc_io.getvalue())
                         
                         progress_bar.progress((idx + 1) / total_rows)
 
             status_text.empty()
             progress_bar.empty()
             
-            st.success(f"🎉 Berhasil memproses {total_rows} dokumen surat ({output_format})!")
+            st.success(f"🎉 Berhasil memproses {total_rows} dokumen surat!")
             
             st.download_button(
-                label=f"⬇️ Unduh Semua Surat dalam File ZIP ({output_format})",
+                label=f"⬇️ Unduh Semua Surat dalam File ZIP",
                 data=zip_buffer.getvalue(),
-                file_name=f"Hasil_Surat_{'PDF' if is_pdf else 'DOCX'}.zip",
+                file_name=f"Arsip_Surat_{'PDF' if is_pdf else 'DOCX'}.zip",
                 mime="application/zip",
                 use_container_width=True
             )
@@ -345,7 +354,7 @@ if excel_file and word_file:
         st.markdown("</div>", unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat membaca file: {str(e)}")
+        st.error(f"Terjadi kesalahan saat memproses: {str(e)}")
 
 else:
     st.info("💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word** pada Langkah 1 untuk memulai.")
