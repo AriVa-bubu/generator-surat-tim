@@ -190,3 +190,15 @@ with col2:
     """, unsafe_allow_html=True)
 
 st.sidebar.success("👈 Pilih salah satu menu di atas untuk mulai!")
+import streamlit as st
+
+st.set_page_config(page_title="PLN Multi Tools", page_icon="⚡", layout="wide")
+
+# Sembunyikan item pertama (yaitu 'app') dari list navigasi sidebar
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] li:first-child {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
