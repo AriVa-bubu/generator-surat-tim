@@ -177,17 +177,38 @@ import requests
 
 st.divider()
 
+import requests
+
+st.divider()
+
 # --- WIDGET CUACA & STATUS SIAGA LAPANGAN ---
 st.subheader("🌤️ Informasi Cuaca & Kesiapsiagaan Lapangan")
+
+# Daftar Koordinat Kota / Unit Operasional PLN
+DAFTAR_LOKASI = {
+    "Surabaya": {"lat": -7.2575, "lon": 112.7521},
+    "Sidoarjo": {"lat": -7.4478, "lon": 112.7183},
+    "Gresik": {"lat": -7.1566, "lon": 112.6555},
+    "Malang": {"lat": -7.9839, "lon": 112.6214},
+    "Pasuruan": {"lat": -7.6453, "lon": 112.9075},
+    "Mojokerto": {"lat": -7.4726, "lon": 112.4381},
+    "Jakarta": {"lat": -6.2088, "lon": 106.8456},
+    "Bandung": {"lat": -6.9175, "lon": 107.6191},
+    "Semarang": {"lat": -6.9667, "lon": 110.4167},
+}
 
 col_weather, col_status = st.columns([1, 1])
 
 with col_weather:
-    st.markdown("##### 📍 Kondisi Cuaca Operasional (Surabaya)")
+    # Dropdown Pilih Lokasi Unit
+    kota_pilihan = st.selectbox("📍 Pilih Wilayah Operasional / ULP:", list(DAFTAR_LOKASI.keys()), index=0)
     
-    # Ambil data cuaca dari API Open-Meteo (Gratis & Tanpa API Key)
+    lat = DAFTAR_LOKASI[kota_pilihan]["lat"]
+    lon = DAFTAR_LOKASI[kota_pilihan]["lon"]
+    
+    # Fetch Data dari Open-Meteo berdasarkan koordinat kota terpilih
     try:
-        url = "https://api.open-meteo.com/v1/forecast?latitude=-7.2575&longitude=112.7521&current_weather=true"
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
         response = requests.get(url, timeout=5).json()
         current = response["current_weather"]
         
@@ -195,7 +216,7 @@ with col_weather:
         wind = current["windspeed"]
         code = current["weathercode"]
         
-        # Pengelompokan status cuaca berdasarkan kode WMO
+        # Pengelompokan status cuaca
         if code in [0, 1]:
             cuaca_desc = "Cerah / Berawan Tipis ☀️"
         elif code in [2, 3]:
