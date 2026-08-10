@@ -3,16 +3,18 @@ import os
 from PIL import Image
 from utils import load_custom_css
 
-# Config
+# Load Icon Tab Browser
 logo_icon = "⚡"
 if os.path.exists("logo_pln.png"):
     logo_icon = Image.open("logo_pln.png")
 
-st.set_page_config(page_title="Kalkulator Biaya Tambah Daya", page_icon=logo_icon, layout="wide")
+st.set_page_config(page_title="Kalkulator Tambah Daya - PLN", page_icon=logo_icon, layout="wide")
 load_custom_css()
 
 st.title("⚡ Kalkulator Estimasi Biaya Tambah Daya (PB/NJ)")
 st.caption("Hitung perkiraan Biaya Penyambungan (BP) dan Uang Jaminan Langganan (UJL)")
+
+st.divider()
 
 col1, col2 = st.columns(2)
 
@@ -26,7 +28,7 @@ with col2:
     ujl_per_va = st.number_input("Estimasi UJL per VA (Rp)", value=150)
     biaya_materai = st.selectbox("Biaya Materai (Rp)", [0, 10000], index=1)
 
-if st.button("🧮 Hitung Estimasi Biaya", type="primary"):
+if st.button("🧮 Hitung Estimasi Biaya", type="primary", use_container_width=True):
     if daya_baru <= daya_lama:
         st.error("Daya Baru harus lebih besar dari Daya Lama!")
     else:
