@@ -169,14 +169,42 @@ with link_col3:
     )
 st.divider()
 
-import requests
+# --- FOOTER & HELPDESK SECTION ---
+footer_col1, footer_col2, footer_col3 = st.columns([2, 2, 1])
 
-st.divider()
+with footer_col1:
+    st.markdown("""
+    #### ⚡ Portal Operasional PLN
+    Aplikasi otomasi internal untuk mempercepat alur kerja harian pegawai:
+    * Generator Surat & Mail Merge (.DOCX / .PDF)
+    * Kalkulator Simulasi P2TL & Tambah Daya
+    * Validasi & Cleaning Data AP2T Excel
+    """)
 
-import requests
+with footer_col2:
+    st.markdown("""
+    #### 📞 Helpdesk & Support IT
+    Mengalami kendala sistem atau butuh penyesuaian template?
+    * **Email Support**: `admin.it@pln.co.id`
+    * **Group Telegram**: Tim Operasional & IT PLN
+    """)
+    st.link_button("💬 Chat Admin IT via WhatsApp", "https://wa.me/6281234567890", use_container_width=True)
 
-st.divider()
+with footer_col3:
+    st.markdown("""
+    #### ℹ️ Info Sistem
+    * **Versi**: `v2.4.0`
+    * **Status**: 🟢 Normal
+    * **Environment**: Production
+    """)
 
+# Copyright Bar di Paling Bawah
+st.markdown("""
+<br>
+<div style="text-align: center; color: #64748b; font-size: 0.85rem; padding: 15px 0; border-top: 1px solid #1e293b;">
+    © 2026 <b>PT PLN (Persero)</b> — Tim Operasional & Layanan Digital. All Rights Reserved.
+</div>
+""", unsafe_allow_html=True)
 import requests
 
 st.divider()
