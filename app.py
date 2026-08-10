@@ -140,3 +140,30 @@ with col_info2:
         2. Pastikan tidak ada karakter aneh di judul kolom Excel.
         3. Hubungi Admin Operasional IT unit terdekat.
         """)
+st.divider()
+
+# 5. LINK AKSES CEPAT LAYANAN RESMI PLN
+st.subheader("🔗 Akses Cepat Portal Resmi PLN")
+
+link_col1, link_col2, link_col3 = st.columns(3)
+
+with link_col1:
+    st.link_button(
+        label="🌐 Website Resmi PLN", 
+        url="https://www.pln.co.id", 
+        use_container_width=True
+    )
+
+with link_col2:
+    st.link_button(
+        label="⚡ Web AP2T / Portal Layanan", 
+        url="https://layanan.pln.co.id",  # Bisa diganti URL portal internal AP2T unit kamu
+        use_container_width=True
+    )
+
+with link_col3:
+    st.link_button(
+        label="📱 Informasi PLN Mobile", 
+        url="https://web.pln.co.id/pelanggan/layanan-online", 
+        use_container_width=True
+    )
