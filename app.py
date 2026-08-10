@@ -305,3 +305,19 @@ with col_status:
         </ul>
     </div>
     """, unsafe_allow_html=True)
+import pandas as pd
+import numpy as np
+
+st.divider()
+
+# Section Grafik Dinamis
+st.subheader("📈 Tren Aktivitas & Pemantauan Operasional")
+
+# Buat contoh data statistik tren harian
+chart_data = pd.DataFrame(
+    np.random.randn(20, 3) + [10, 15, 20],
+    columns=['Validasi P2TL', 'Clean Data AP2T', 'Generator Surat']
+)
+
+# Render Grafik Interaktif
+st.line_chart(chart_data)
