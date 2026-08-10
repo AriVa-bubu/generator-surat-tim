@@ -21,30 +21,58 @@ load_custom_css()
 # Styling Khusus untuk Card & Layout
 st.markdown("""
 <style>
-    /* Styling Banner Header */
+    /* 1. Animasi Gradasi Bergerak untuk Header Banner */
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
     .header-banner {
-        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        background: linear-gradient(-45deg, #0284c7, #0369a1, #0f172a, #0284c7);
+        background-size: 300% 300%;
+        animation: gradientBG 8s ease infinite;
         padding: 24px;
         border-radius: 12px;
         color: white;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
     }
-    
-    /* Styling Tombol Page Link Agar Berbentuk Kartu Mewah */
-    div[data-testid="stPageLink-direct"] {
+
+    /* 2. Animasi Fade-In saat Halaman Pertama Dimuat */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    div[data-testid="stPageLink"] {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+    /* 3. Efek Transisi Kartu Membesar / Melayang (Hover Effect) */
+    div[data-testid="stPageLink"] a {
         background-color: #1e293b !important;
         border: 1px solid #334155 !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        min-height: 120px !important;
-        transition: all 0.3s ease-in-out !important;
+        border-radius: 10px !important;
+        padding: 16px 20px !important;
+        min-height: 110px !important;
+        display: flex !important;
+        align-items: center !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
     }
-    div[data-testid="stPageLink-direct"]:hover {
+
+    div[data-testid="stPageLink"] a:hover {
         border-color: #38bdf8 !important;
         background-color: #0f172a !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.2) !important;
+        transform: translateY(-5px) scale(1.02) !important; /* Kartu naik & membesar sedikit */
+        box-shadow: 0 12px 25px -5px rgba(56, 189, 248, 0.4) !important; /* Efek menyala */
+    }
+
+    div[data-testid="stPageLink"] a span {
+        color: #f1f5f9 !important;
+        font-size: 0.95rem !important;
+        line-height: 1.4 !important;
     }
 </style>
 """, unsafe_allow_html=True)
