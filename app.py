@@ -188,7 +188,7 @@ with footer_col2:
     * **Email Support**: `admin.it@pln.co.id`
     * **Group Telegram**: Tim Operasional & IT PLN
     """)
-    st.link_button("💬 Chat Admin IT via WhatsApp", "https://wa.me/6281234567890", use_container_width=True)
+    st.link_button("💬 Chat Admin IT via WhatsApp", "https://wa.me/6281933041691", use_container_width=True)
 
 with footer_col3:
     st.markdown("""
