@@ -167,3 +167,33 @@ with link_col3:
         url="https://web.pln.co.id/pelanggan/layanan-online", 
         use_container_width=True
     )
+st.divider()
+
+# --- WIDGET CUACA & STATUS SIAGA LAPANGAN ---
+st.subheader("🌤️ Informasi Cuaca & Kesiapsiagaan Lapangan")
+
+col_weather, col_status = st.columns([1, 1])
+
+with col_weather:
+    # Embedded Weather Widget (Otomatis menyesuaikan area / Surabaya & sekitarnya)
+    st.markdown("""
+    <div style="background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center;">
+        <iframe src="https://i.w3schools.com/tags/showiframe.asp?filename=tryhtml_iframe" style="display:none"></iframe>
+        <a class="weatherwidget-io" href="https://forecast7.com/id/neg7d25112d75/surabaya/" data-label_1="KONDISI CUACA" data-label_2="OPERASIONAL PLN" data-theme="dark" data-basecolor="#1e293b" data-accent="#0284c7" data-textcolor="#ffffff">KONDISI CUACA OPERASIONAL PLN</a>
+        <script>
+        !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+        </script>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_status:
+    st.markdown("""
+    <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; height: 100%;">
+        <h4 style="margin-top:0; color: #38bdf8;">⚠️ Himbauan Keselamatan Kerja (K3)</h4>
+        <ul style="color: #cbd5e1; font-size: 0.95rem; padding-left: 20px; margin-bottom: 0;">
+            <li><b>Hujan Lebat / Petir:</b> Tunda pekerjaan pemeliharaan pada jaringan Tegangan Menengah (TM) & Tegangan Rendah (TR) terbuka.</li>
+            <li><b>APD Lengkap:</b> Pastikan penggunaan Helm K3, Sarung Tangan Isolasi (Insulated Gloves), dan Sepatu Safety sebelum naik pekarangan/tiang.</li>
+            <li><b>Gunakan SOP Grounding:</b> Selalu pasang <i>Grounding Local</i> sebelum menyentuh penghantar yang dipadamkan.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
