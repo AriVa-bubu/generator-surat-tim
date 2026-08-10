@@ -51,7 +51,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.page_link(
-        "pages/1_✉️_Generator_Surat.py", 
+        "pages/1_Generator_Surat.py", 
         label="1. Generator Surat & Arsip (ZIP)\n\nBuat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara massal dari data Excel.", 
         icon="✉️",
         use_container_width=True
@@ -60,7 +60,7 @@ with col1:
     st.write("")
 
     st.page_link(
-        "pages/2_🧮_Hitung_P2TL.py", 
+        "pages/2_Hitung_P2TL.py", 
         label="2. Kalkulator Simulasi P2TL\n\nHitung perkiraan tagihan susulan P2TL berdasarkan golongan tarif, jam nyala, dan pemakaian.", 
         icon="🧮",
         use_container_width=True
@@ -69,7 +69,7 @@ with col1:
     st.write("")
 
     st.page_link(
-        "pages/5_⚡_Kalkulator_Tambah_Daya.py", 
+        "pages/5_Kalkulator_Tambah_Daya.py", 
         label="5. Kalkulator Tambah Daya (PB/NJ)\n\nHitung estimasi Biaya Penyambungan (BP), UJL, dan total biaya tambah daya pelanggan.", 
         icon="⚡",
         use_container_width=True
@@ -77,7 +77,7 @@ with col1:
 
 with col2:
     st.page_link(
-        "pages/3_🧹_Clean_Data_Excel.py", 
+        "pages/3_Clean_Data_Excel.py", 
         label="3. Validator & Cleaning Data Excel\n\nBersihkan data mentah AP2T: Format otomatis mata uang (Rp), IDPEL 12 digit, dan standarisasi.", 
         icon="🧹",
         use_container_width=True
@@ -86,7 +86,7 @@ with col2:
     st.write("")
 
     st.page_link(
-        "pages/4_📱_Generator_QR.py", 
+        "pages/4_Generator_QR.py", 
         label="4. Generator QR Code Validasi\n\nBuat QR Code validasi dokumen/surat tugas secara otomatis yang dapat di-embed atau diunduh.", 
         icon="📱",
         use_container_width=True
