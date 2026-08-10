@@ -18,35 +18,63 @@ st.set_page_config(
 # Load CSS Custom
 load_custom_css()
 
-# Header Portal
-st.markdown("""
-<div style="background-color: #0e4b75; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-    <h2 style="color: white; margin: 0;">⚡ Portal Operasional & Layanan Digital PLN</h2>
-    <p style="color: #e0e0e0; margin: 5px 0 0 0;">Pusat alat bantu otomatisasi kerja harian PLN: Generator Surat, P2TL, Clean Data, QR Code & Kalkulator.</p>
-</div>
-""", unsafe_allow_html=True)
-
-st.subheader("🛠️ Pilih Modul Operasional (Klik Kartu / Gunakan Sidebar):")
-
-# CSS khusus agar tombol page_link berukuran besar mirip kartu
+# Styling Khusus untuk Card & Layout
 st.markdown("""
 <style>
-div[data-testid="stPageLink-direct"] {
-    background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 15px;
-    transition: all 0.3s ease;
-}
-div[data-testid="stPageLink-direct"]:hover {
-    border-color: #38bdf8;
-    background-color: #0f172a;
-    transform: translateY(-2px);
-}
+    /* Styling Banner Header */
+    .header-banner {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        padding: 24px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Styling Tombol Page Link Agar Berbentuk Kartu Mewah */
+    div[data-testid="stPageLink-direct"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        min-height: 120px !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+    div[data-testid="stPageLink-direct"]:hover {
+        border-color: #38bdf8 !important;
+        background-color: #0f172a !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.2) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Grid Kolom
+# 1. HEADER BANNER
+st.markdown("""
+<div class="header-banner">
+    <h1 style="margin: 0; font-size: 2rem; color: white;">⚡ Portal Operasional & Layanan Digital PLN</h1>
+    <p style="margin: 8px 0 0 0; color: #e0f2fe; font-size: 1rem;">
+        Pusat otomasi kerja harian PLN: Pembuatan Surat Massal, P2TL, Validasi Excel, QR Code Generator & Kalkulator Tambah Daya.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# 2. STATS / METRICS BANNER (Bikin Halaman Rame & Profesional)
+m1, m2, m3, m4 = st.columns(4)
+with m1:
+    st.metric(label="🛠️ Modul Aktif", value="5 Modul", delta="Siap Pakai")
+with m2:
+    st.metric(label="⚡ Sistem AP2T", value="Terhubung", delta="Online")
+with m3:
+    st.metric(label="📄 Format Dokumen", value="DOCX / PDF", delta="Otomatis")
+with m4:
+    st.metric(label="🔒 Keamanan Validasi", value="QR Code", delta="Encrypted")
+
+st.divider()
+
+# 3. KARTU MODUL OPERASIONAL
+st.subheader("🚀 Pilih Modul Operasional")
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -91,3 +119,24 @@ with col2:
         icon="📱",
         use_container_width=True
     )
+
+st.divider()
+
+# 4. PENGUMUMAN & FAQ (Pelengkap Tampilan Bawah)
+col_info1, col_info2 = st.columns(2)
+
+with col_info1:
+    st.info("""
+    ### 📢 Catatan & Panduan Penggunaan
+    * **Data Keamanan**: Seluruh proses pengolahan file Excel dan Dokumen dilakukan secara *in-memory* tanpa menyimpan data di server public.
+    * **Format Template**: Gunakan format variabel `{NAMA}`, `{IDPEL}`, `{ALAMAT}` untuk *mail merge* di modul Generator Surat.
+    """)
+
+with col_info2:
+    with st.expander("❓ Butuh Bantuan / Kendala Sistem?"):
+        st.write("""
+        Jika menemukan error saat mengunggah data Excel atau mengunduh hasil ZIP:
+        1. Pastikan ekstensi file adalah `.xlsx` atau `.csv`.
+        2. Pastikan tidak ada karakter aneh di judul kolom Excel.
+        3. Hubungi Admin Operasional IT unit terdekat.
+        """)
