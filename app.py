@@ -3,7 +3,28 @@ import os
 import base64
 import streamlit as st
 from utils import load_custom_css  # 👈 Import fungsi
+import streamlit as st
+import os
+from PIL import Image
+from utils import load_custom_css
 
+# Load logo untuk Tab Browser (Favicon)
+logo_icon = "⚡"
+if os.path.exists("logo_pln.png"):
+    logo_icon = Image.open("logo_pln.png")
+
+# Set Page Config
+st.set_page_config(
+    page_title="PLN - Portal Operasional Digital",
+    page_icon=logo_icon,  # <-- Pake Image PIL biar logo tab BROWSER MUNCUL!
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Load CSS Custom biar tulisan 'app' berubah jadi '🏠 Beranda Utama'
+load_custom_css()
+
+# --- SISA KODE APP.PY KAMU DI BAWAH INI ---
 st.set_page_config(page_title="PLN Multi Tools", page_icon="⚡", layout="wide")
 load_custom_css()  # 👈 Jalankan fungsi
 def get_base64_of_bin_file(bin_file):
