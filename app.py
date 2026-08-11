@@ -171,28 +171,31 @@ with col_info2:
 st.divider()
 
 # 5. LINK AKSES CEPAT LAYANAN RESMI PLN
-st.subheader("🔗 Akses Cepat Portal Resmi PLN")
+import streamlit as st
 
-link_col1, link_col2, link_col3 = st.columns(3)
+st.subheader("🔗 Akses Cepat Portal Resmi & Layanan PLN")
 
-with link_col1:
+col_link1, col_link2, col_link3 = st.columns(3)
+
+with col_link1:
     st.link_button(
-        label="🌐 Website Resmi PLN", 
-        url="https://www.pln.co.id", 
+        "🌐 Website Resmi PLN", 
+        "https://www.pln.co.id", 
         use_container_width=True
     )
 
-with link_col2:
+with col_link2:
     st.link_button(
-        label="⚡ Web AP2T / Portal Layanan", 
-        url="https://layanan.pln.co.id",  # Bisa diganti URL portal internal AP2T unit kamu
+        "⚡ Portal Layanan & AP2T", 
+        "https://layanan.pln.co.id", 
         use_container_width=True
     )
 
-with link_col3:
+with col_link3:
+    # Menggunakan URL landing page resmi PLN Mobile
     st.link_button(
-        label="📱 Informasi PLN Mobile", 
-        url="https://web.pln.co.id/pelanggan/layanan-online", 
+        "📱 Aplikasi PLN Mobile", 
+        "https://web.pln.co.id/pelanggan/layanan-online/pln-mobile", 
         use_container_width=True
     )
 st.divider()
