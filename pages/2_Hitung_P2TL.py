@@ -1,36 +1,33 @@
 import streamlit as st
 import os
 import base64
-import streamlit as st
 
-# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
-if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
-    st.error("🔒 Akses Ditolak! Anda harus login terlebih dahulu di Dashboard Utama.")
-    st.info("Silakan buka menu 'app' atau 'Dashboard' di sidebar untuk melakukan login.")
-    st.stop()  # SCRIPT DITENTIKAN DI SINI, FITUR DI BAWAHNYA TIDAK AKAN RENDER
-# ----------------------------------------------
-
-# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
-st.title("📄 Generator Surat & Arsip")
-# ... Sisa kode fitur modul kamu
-def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
+# --- KONFIGURASI HALAMAN (WAJIB PALING ATAS) ---
 logo_path = "logo_pln.png"
-logo_base64 = ""
-if os.path.exists(logo_path):
-    logo_base64 = get_base64_of_bin_file(logo_path)
-
 st.set_page_config(
     page_title="Simulasi P2TL - PLN Platform",
     page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide"
 )
+
+# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
 from auth import check_login, render_logout_button
 check_login()
 render_logout_button()
+# ----------------------------------------------
+
+# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
+st.title("🧮 Simulator Hitung Tagihan Susulan (P2TL)")
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+logo_base64 = ""
+if os.path.exists(logo_path):
+    logo_base64 = get_base64_of_bin_file(logo_path)
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -127,7 +124,6 @@ with col2:
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🧮 Hitung Estimasi Tagihan Susulan", type="primary", use_container_width=True):
-    # Formulas (Simulated)
     kwh_bulan = (daya_va / 1000) * jam_nyala
     biaya_kwh_dasar = kwh_bulan * tarif_kwh
     
