@@ -11,7 +11,83 @@ from utils import load_custom_css
 # =============================================================================
 # KONFIGURASI HALAMAN
 # =============================================================================
+import streamlit as st
+import hashlib
 
+# 1. Konfigurasi Halaman (Harus di baris paling atas Streamlit)
+st.set_page_config(
+    page_title="PLN Multi-Tools Operational",
+    page_icon="⚡",
+    layout="wide"
+)
+
+# 2. Database User Sederhana (Username : Password Hashing)
+# Untuk keamanan, password di-hash menggunakan SHA-256
+def make_hash(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+# Contoh Hash Password:
+# "admin123" -> 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
+# "pln2026"  -> a6c3c52e4604d5ff186632fa5f05b1c93a02bb80e92fae3f16d1f0579e49a896
+USER_DB = {
+    "admin": {"password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", "nama": "Admin IT PLN", "role": "Administrator"},
+    "petugas": {"password_hash": "a6c3c52e4604d5ff186632fa5f05b1c93a02bb80e92fae3f16d1f0579e49a896", "nama": "Budi Santoso (P2TL)", "role": "Petugas Lapangan"}
+}
+
+# 3. Inisialisasi Session State Login
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+    st.session_state["username"] = ""
+    st.session_state["user_info"] = {}
+
+# 4. Fungsi Tampilan Form Login
+def show_login_page():
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<h2 style='text-align: center;'>⚡ Portal Operasional PLN</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #94a3b8;'>Silakan login menggunakan akun dinas Anda</p>", unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            username_input = st.text_input("Username").strip().lower()
+            password_input = st.text_input("Password", type="password")
+            submit_btn = st.form_submit_button("🔑 Login", use_container_width=True)
+            
+            if submit_btn:
+                if username_input in USER_DB:
+                    hashed_pwd = make_hash(password_input)
+                    if hashed_pwd == USER_DB[username_input]["password_hash"]:
+                        st.session_state["logged_in"] = True
+                        st.session_state["username"] = username_input
+                        st.session_state["user_info"] = USER_DB[username_input]
+                        st.success(f"Selamat datang, {USER_DB[username_input]['nama']}!")
+                        st.rerun()  # Refresh halaman otomatis
+                    else:
+                        st.error("Password salah!")
+                else:
+                    st.error("Username tidak ditemukan!")
+
+# 5. Logika Akses Halaman
+if not st.session_state["logged_in"]:
+    show_login_page()
+else:
+    # --- JIKA SUDAH LOGIN, TAMPILKAN DASHBOARD UTAMA ---
+    
+    # Widget User di Sidebar + Tombol Logout
+    with st.sidebar:
+        st.write(f"👤 **{st.session_state['user_info']['nama']}**")
+        st.caption(f"Role: {st.session_state['user_info']['role']}")
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state["logged_in"] = False
+            st.session_state["username"] = ""
+            st.session_state["user_info"] = {}
+            st.rerun()
+        st.divider()
+
+    # --- SELURUH KODE DASHBOARD KAMU YANG LAMA DIPASANG DI SINI ---
+    st.title("🚀 Dashboard Utama Portal PLN")
+    st.write(f"Halo **{st.session_state['user_info']['nama']}**, pilih modul di bawah untuk mulai bekerja.")
+    
+    # ... (Sisa kode kartu modul, widget cuaca, footer, dll.)
 logo_icon = "⚡"
 if os.path.exists("logo_pln.png"):
     logo_icon = Image.open("logo_pln.png")
