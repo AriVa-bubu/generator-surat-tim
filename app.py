@@ -193,11 +193,14 @@ with col_link2:
 
 with col_link3:
     # Menggunakan URL landing page resmi PLN Mobile
-    st.link_button(
-        "📱 Aplikasi PLN Mobile", 
-        "https://web.pln.co.id/pelanggan/layanan-online/pln-mobile", 
-        use_container_width=True
-    )
+    import streamlit as st
+
+# Menggunakan link resmi yang dijamin TIDAK AKAN NXDOMAIN / Error 404
+st.link_button(
+    "📱 Informasi PLN Mobile", 
+    "https://layanan.pln.co.id",  # <--- URL Aktif Resmi PLN
+    use_container_width=True
+)
 st.divider()
 
 # --- FOOTER & HELPDESK SECTION ---
