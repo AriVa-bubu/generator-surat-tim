@@ -3,7 +3,18 @@ import pandas as pd
 import io
 import os
 import base64
+import streamlit as st
 
+# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.error("🔒 Akses Ditolak! Anda harus login terlebih dahulu di Dashboard Utama.")
+    st.info("Silakan buka menu 'app' atau 'Dashboard' di sidebar untuk melakukan login.")
+    st.stop()  # SCRIPT DITENTIKAN DI SINI, FITUR DI BAWAHNYA TIDAK AKAN RENDER
+# ----------------------------------------------
+
+# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
+st.title("📄 Generator Surat & Arsip")
+# ... Sisa kode fitur modul kamu
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()

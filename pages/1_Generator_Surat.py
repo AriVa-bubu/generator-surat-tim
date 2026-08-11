@@ -14,7 +14,18 @@ from docxtpl import DocxTemplate
 # =============================================================================
 # HELPERS
 # =============================================================================
+import streamlit as st
 
+# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.error("🔒 Akses Ditolak! Anda harus login terlebih dahulu di Dashboard Utama.")
+    st.info("Silakan buka menu 'app' atau 'Dashboard' di sidebar untuk melakukan login.")
+    st.stop()  # SCRIPT DITENTIKAN DI SINI, FITUR DI BAWAHNYA TIDAK AKAN RENDER
+# ----------------------------------------------
+
+# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
+st.title("📄 Generator Surat & Arsip")
+# ... Sisa kode fitur modul kamu
 ILLEGAL_FILENAME_CHARS = re.compile(r'[\\/*?:"<>|]')
 NO_FOLDER_OPTION = "Tanpa Folder (1 Folder Utama)"
 
