@@ -219,7 +219,7 @@ with footer_col2:
     st.markdown("""
     #### 📞 Helpdesk & Support IT
     Mengalami kendala sistem atau butuh penyesuaian template?
-    * **Email Support**: `24030214@mhs.unesa.ac.id`
+    * **Email Support**: `24030214005@mhs.unesa.ac.id`
     * **Group Telegram**: Tim Operasional & IT PLN
     """)
     st.link_button("💬 Chat Admin IT via WhatsApp", "https://wa.me/6281933041691", use_container_width=True)
