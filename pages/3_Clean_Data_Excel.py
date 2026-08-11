@@ -3,35 +3,33 @@ import pandas as pd
 import io
 import os
 import base64
-import streamlit as st
 
-st.set_page_config(...)   # HARUS paling atas
-from auth import check_login, render_logout_button
-check_login()
-render_logout_button()
-# baru kode fitur di bawahnya
-
-# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
-st.title("📄 Generator Surat & Arsip")
-# ... Sisa kode fitur modul kamu
-def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
+# --- KONFIGURASI HALAMAN (WAJIB PALING ATAS) ---
 logo_path = "logo_pln.png"
-logo_base64 = ""
-if os.path.exists(logo_path):
-    logo_base64 = get_base64_of_bin_file(logo_path)
-
 st.set_page_config(
     page_title="Clean Data Excel - PLN Platform",
     page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide"
 )
+
+# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
 from auth import check_login, render_logout_button
 check_login()
-render_logout_button() 
+render_logout_button()
+# ----------------------------------------------
+
+# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
+st.title("🧹 Cleaning & Standarisasi Data Excel AP2T")
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+logo_base64 = ""
+if os.path.exists(logo_path):
+    logo_base64 = get_base64_of_bin_file(logo_path)
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');

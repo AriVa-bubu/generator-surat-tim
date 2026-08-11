@@ -2,29 +2,22 @@ import streamlit as st
 import os
 from PIL import Image
 from utils import load_custom_css
-import streamlit as st
 
-# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
-st.set_page_config(...)   # HARUS paling atas
-from auth import check_login, render_logout_button
-check_login()
-render_logout_button()
-# baru kode fitur di bawahnya
-# ----------------------------------------------
-
-# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
-st.title("📄 Generator Surat & Arsip")
-# ... Sisa kode fitur modul kamu
-# Load Icon Tab Browser
+# --- KONFIGURASI HALAMAN (WAJIB PALING ATAS) ---
 logo_icon = "⚡"
 if os.path.exists("logo_pln.png"):
     logo_icon = Image.open("logo_pln.png")
 
 st.set_page_config(page_title="Kalkulator Tambah Daya - PLN", page_icon=logo_icon, layout="wide")
 load_custom_css()
+
+# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
 from auth import check_login, render_logout_button
 check_login()
-render_logout_button() 
+render_logout_button()
+# ----------------------------------------------
+
+# --- KODE MODUL FITUR KAMU DI BAWAH INI ---
 st.title("⚡ Kalkulator Estimasi Biaya Tambah Daya (PB/NJ)")
 st.caption("Hitung perkiraan Biaya Penyambungan (BP) dan Uang Jaminan Langganan (UJL)")
 
