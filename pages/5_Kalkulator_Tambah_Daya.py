@@ -21,7 +21,9 @@ if os.path.exists("logo_pln.png"):
 
 st.set_page_config(page_title="Kalkulator Tambah Daya - PLN", page_icon=logo_icon, layout="wide")
 load_custom_css()
-
+from auth import check_login, render_logout_button
+check_login()
+render_logout_button() 
 st.title("⚡ Kalkulator Estimasi Biaya Tambah Daya (PB/NJ)")
 st.caption("Hitung perkiraan Biaya Penyambungan (BP) dan Uang Jaminan Langganan (UJL)")
 

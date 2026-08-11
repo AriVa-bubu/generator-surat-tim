@@ -28,7 +28,9 @@ st.set_page_config(
     page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide"
 )
-
+from auth import check_login, render_logout_button
+check_login()
+render_logout_button()
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
