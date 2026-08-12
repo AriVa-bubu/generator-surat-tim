@@ -10,11 +10,6 @@ import streamlit as st
 # =============================================================================
 # HELPERS
 # =============================================================================
-# --- GUARD / PROTEKSI HALAMAN (WAJIB LOGIN) ---
-from auth import check_login, render_logout_button
-check_login()
-render_logout_button()
-# ----------------------------------------------
 
 def get_base64_of_bin_file(bin_file: str) -> str:
     with open(bin_file, "rb") as f:
@@ -143,7 +138,9 @@ def style_summary(summary: pd.DataFrame):
             return "background-color: rgba(251, 191, 36, 0.15); color: #fde68a; font-weight: 700;"
         return "color: #86efac;"
 
-    return summary.style.applymap(highlight_status, subset=["Status Sekarang"])
+    styler = summary.style
+    style_fn = getattr(styler, "map", None) or styler.applymap
+    return style_fn(highlight_status, subset=["Status Sekarang"])
 
 
 def build_customer_chart(g: pd.DataFrame):
