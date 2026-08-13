@@ -1,152 +1,41 @@
-
-Claude finished the response
-
-Edited 2 files, ran a command
-Edited 2 files, ran a command
-Sekarang tambahkan 3 kartu modul baru ke grid:
-
-
-Edited 2 files, ran a command, read a file
-Edited 2 files, ran a command, read a file
-Sudah diupdate — grid sekarang berisi 8 kartu modul, dengan susunan:
-
-Kolom kiri: 1. Generator Surat → 2. P2TL → 5. Tambah Daya → 7. Prediksi Token Prabayar
-Kolom kanan: 3. Clean Data Excel → 4. Generator QR → 6. Deteksi kWh Macet → 8. Koreksi Token P2TL
-
-Tiap kartu baru dapat warna aksen sendiri (cyan untuk Prediksi Token, oranye untuk Deteksi kWh Macet, merah untuk Koreksi P2TL) biar tetap konsisten sama gaya kartu lainnya. KPI "Modul Aktif" juga sudah saya update dari "5 Modul" jadi "8 Modul". Tinggal timpa app.py lama di project kamu dengan yang ini.
-
-
-App
-PY 
-hapus informasi cuaca ganti fitur yang enteng dan nyaman di semua device
-
-
-Ran a command
-Ran a command
-Setuju, widget cuaca butuh panggilan API eksternal yang bisa lambat/gagal di jaringan lapangan — kurang cocok untuk "enteng & nyaman di semua device". Saya ganti dengan panel info yang murni dihitung lokal (tanpa API sama sekali): sapaan waktu real-time + tips K3 harian yang berganti otomatis tiap hari.
-
-
-Viewed a file, edited a file
-Viewed a file, edited a file
-Sekarang tambahkan CSS untuk kartu sapaan (biar konsisten dengan .k3-card yang sudah ada):
-
-
-Add CSS for greeting card, responsive on mobile
-Add CSS for greeting card, responsive on mobile
-Sekarang ganti fungsi render_weather_widget():
-
-
-Viewed 2 files, edited a file
-Viewed 2 files, edited a file
-Terakhir, update pemanggilan fungsinya di main():
-
-
-Ran a command, edited a file
-Ran a command, edited a file
-Sekarang saya validasi syntax-nya bersih dan tidak ada sisa referensi ke kode cuaca yang lama:
-
-
-Ran a command, read a file
-Ran a command, read a file
-Perubahan yang saya buat:
-
-Sebelum	Sesudah
-Widget cuaca — panggil API open-meteo.com tiap render (bisa lambat/gagal kalau jaringan lapangan tidak stabil)	Panel "Info Hari Ini" — sapaan otomatis (Pagi/Siang/Sore/Malam) + tanggal & jam lokal + tips K3 yang berganti tiap hari, semuanya dihitung langsung di server, tanpa panggilan API sama sekali
-Dependency requests untuk fetch cuaca	Dihapus — modul ini sekarang nol dependency eksternal
-Layout tetap sama (2 kolom) tapi belum ada aturan khusus untuk layar kecil	Ditambah media query @media (max-width: 640px) supaya padding & ukuran judul otomatis menyesuaikan di HP
-Tips K3-nya bergilir otomatis 10 pilihan berdasarkan tanggal (jadi tiap hari beda, tapi konsisten sepanjang hari itu — bukan acak tiap refresh, biar tidak membingungkan). Tinggal timpa app.py lama kamu dengan yang ini.
-
-
-App
-PY 
-Ringan & langsung tampil di semua perangkat — tanpa perlu memuat data dari luar.
-hapus ini dan pindah di awal halaman
-
-
-Ran a command, viewed a file
-Ran a command, viewed a file
-Ketemu. Saya hapus dari sana dan taruh di header banner paling atas halaman:
-
-
-Edited 2 files, viewed a file, ran a command
-Edited 2 files, viewed a file, ran a command
-Sudah dipindah — teksnya sekarang tampil sebagai baris kecil paling atas di dalam header banner (sebelum badge "SISTEM AKTIF"), dan bagian "Info Hari Ini" di bawah jadi lebih ringkas tanpa subjudul. Tinggal timpa app.py lama kamu dengan yang ini.
-
-
-App
-PY 
-1786594491756_image.png
-yang dipindah ini wok bukan malah kata katanya
-
-
-Recalibrated pemahaman tentang scope perubahan yang diminta
-Recalibrated pemahaman tentang scope perubahan yang diminta
-Ooh maaf, saya salah paham — yang dipindah itu panel "Info Hari Ini"-nya, bukan cuma kalimatnya. Saya perbaiki sekarang: teks itu saya hapus total, dan seluruh panel (sapaan + tips K3) saya pindah ke urutan paling atas halaman, tepat setelah header banner.
-
-
-Ran a command
-Ran a command
-Hapus teks yang saya tempel salah tadi di header banner:
-
-Remove the wrongly-added subtitle text from header banner
-Remove the wrongly-added subtitle text from header banner
-Pindahkan urutan pemanggilan render_quick_info_panel() ke paling atas, tepat setelah header:
-
-Viewed a file, edited a file, ran a command
-Viewed a file, edited a file, ran a command
-Urutan halaman sekarang: Header → Info Hari Ini (sapaan + tips K3) → KPI → Modul → dst. Teks kalimat yang tadi salah taruh sudah dibuang total. Tinggal timpa app.py lama kamu.
-
-
-App
-PY 
-
-You’ve used 90% of your session limit
-Upgrade
-
-
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-App · PY
 import datetime as dt
 import os
- 
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image
- 
+
 from auth import check_login, render_logout_button
 from utils import load_custom_css
- 
+
 # =============================================================================
 # KONFIGURASI HALAMAN
 # =============================================================================
- 
+
 logo_icon = "⚡"
 if os.path.exists("logo_pln.png"):
     logo_icon = Image.open("logo_pln.png")
- 
+
 st.set_page_config(
     page_title="PLN - Portal Operasional Digital",
     page_icon=logo_icon,
     layout="wide",
     initial_sidebar_state="expanded",
 )
- 
+
 # Gerbang login — halaman berhenti di sini jika belum login
 check_login()
 render_logout_button()
- 
+
 load_custom_css()
- 
+
 HARI_ID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 BULAN_ID = [
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
     "Juli", "Agustus", "September", "Oktober", "November", "Desember",
 ]
- 
+
 K3_TIPS = [
     "Selalu pasang Grounding Local sebelum menyentuh penghantar bertegangan.",
     "Pastikan APD lengkap: Helm K3, Sarung Tangan Isolasi, dan Sepatu Safety sebelum bekerja di lapangan.",
@@ -159,8 +48,8 @@ K3_TIPS = [
     "Jaga jarak aman minimal dari jaringan Tegangan Menengah saat menggunakan alat panjang/logam.",
     "Istirahat cukup sebelum shift lapangan — kelelahan adalah penyebab umum kecelakaan kerja.",
 ]
- 
- 
+
+
 def get_greeting(hour: int) -> tuple[str, str]:
     if 4 <= hour < 11:
         return "Selamat Pagi", "☀️"
@@ -169,35 +58,35 @@ def get_greeting(hour: int) -> tuple[str, str]:
     if 15 <= hour < 18:
         return "Selamat Sore", "🌇"
     return "Selamat Malam", "🌙"
- 
- 
+
+
 # =============================================================================
 # STYLING — DESAIN MODERN
 # =============================================================================
- 
+
 def inject_custom_style() -> None:
     st.markdown(
         """
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
- 
+
             html, body, [class*="css"] {
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
- 
+
             .main .block-container {
                 padding-top: 1.5rem;
                 padding-bottom: 3rem;
                 max-width: 1200px;
             }
- 
+
             /* ---------- HEADER BANNER ---------- */
             @keyframes gradientBG {
                 0% { background-position: 0% 50%; }
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
- 
+
             .header-banner {
                 position: relative;
                 overflow: hidden;
@@ -211,7 +100,7 @@ def inject_custom_style() -> None:
                 box-shadow: 0 15px 35px -8px rgba(2, 132, 199, 0.45);
                 border: 1px solid rgba(255, 255, 255, 0.08);
             }
- 
+
             .header-banner::before {
                 content: "";
                 position: absolute;
@@ -221,7 +110,7 @@ def inject_custom_style() -> None:
                 opacity: 0.6;
                 pointer-events: none;
             }
- 
+
             .header-status-chip {
                 display: inline-flex;
                 align-items: center;
@@ -237,7 +126,7 @@ def inject_custom_style() -> None:
                 position: relative;
                 z-index: 1;
             }
- 
+
             .header-status-chip .dot {
                 width: 7px;
                 height: 7px;
@@ -246,12 +135,12 @@ def inject_custom_style() -> None:
                 box-shadow: 0 0 8px #4ade80;
                 animation: pulse 1.8s ease-in-out infinite;
             }
- 
+
             @keyframes pulse {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.35; }
             }
- 
+
             .header-title {
                 margin: 0;
                 font-size: 2.2rem;
@@ -260,7 +149,7 @@ def inject_custom_style() -> None:
                 position: relative;
                 z-index: 1;
             }
- 
+
             .header-subtitle {
                 margin: 10px 0 0 0;
                 color: #e0f2fe;
@@ -270,7 +159,7 @@ def inject_custom_style() -> None:
                 position: relative;
                 z-index: 1;
             }
- 
+
             /* ---------- KPI CARDS ---------- */
             .kpi-card {
                 background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
@@ -280,19 +169,19 @@ def inject_custom_style() -> None:
                 height: 100%;
                 transition: all 0.25s ease;
             }
- 
+
             .kpi-card:hover {
                 border-color: #38bdf8;
                 transform: translateY(-3px);
                 box-shadow: 0 10px 22px -6px rgba(56, 189, 248, 0.25);
             }
- 
+
             .kpi-icon {
                 font-size: 1.4rem;
                 margin-bottom: 8px;
                 display: inline-block;
             }
- 
+
             .kpi-label {
                 font-size: 0.78rem;
                 color: #94a3b8;
@@ -300,14 +189,14 @@ def inject_custom_style() -> None:
                 font-weight: 700;
                 letter-spacing: 0.03em;
             }
- 
+
             .kpi-value {
                 font-size: 1.55rem;
                 font-weight: 800;
                 color: #f8fafc;
                 margin: 4px 0 8px 0;
             }
- 
+
             .kpi-delta {
                 display: inline-flex;
                 align-items: center;
@@ -319,7 +208,7 @@ def inject_custom_style() -> None:
                 padding: 3px 9px;
                 border-radius: 999px;
             }
- 
+
             /* ---------- SECTION HEADING ---------- */
             .section-heading {
                 font-size: 1.3rem;
@@ -327,24 +216,24 @@ def inject_custom_style() -> None:
                 color: #f8fafc;
                 margin-bottom: 2px;
             }
- 
+
             .section-subheading {
                 font-size: 0.9rem;
                 color: #94a3b8;
                 margin-bottom: 18px;
             }
- 
+
             /* ---------- MODULE CARDS (st.page_link) ---------- */
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
- 
+
             div[data-testid="stPageLink"] {
                 animation: fadeIn 0.5s ease-in-out;
                 position: relative;
             }
- 
+
             div[data-testid="stPageLink"] a {
                 background: linear-gradient(160deg, #1e293b 0%, #16202f 100%) !important;
                 border: 1px solid #2b3a52 !important;
@@ -359,14 +248,14 @@ def inject_custom_style() -> None:
                 text-decoration: none !important;
                 position: relative !important;
             }
- 
+
             div[data-testid="stPageLink"] a:hover {
                 border-color: #38bdf8 !important;
                 background: linear-gradient(160deg, #223049 0%, #16202f 100%) !important;
                 transform: translateY(-4px) scale(1.015) !important;
                 box-shadow: 0 14px 28px -8px rgba(56, 189, 248, 0.35) !important;
             }
- 
+
             div[data-testid="stPageLink"] a:hover::after {
                 content: "Buka →";
                 position: absolute;
@@ -377,24 +266,24 @@ def inject_custom_style() -> None:
                 color: #38bdf8;
                 opacity: 1;
             }
- 
+
             div[data-testid="stPageLink"] a::after {
                 content: "";
                 opacity: 0;
                 transition: opacity 0.25s ease;
             }
- 
+
             div[data-testid="stPageLink"] a span {
                 color: #f1f5f9 !important;
                 font-size: 0.95rem !important;
                 line-height: 1.45 !important;
             }
- 
+
             div[data-testid="stPageLink"] a span[data-testid="stIconEmoji"] {
                 font-size: 1.9rem !important;
                 line-height: 1 !important;
             }
- 
+
             /* Aksen warna berbeda tiap kartu modul */
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(1) a { border-top-color: #38bdf8 !important; }
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #a78bfa !important; }
@@ -404,13 +293,13 @@ def inject_custom_style() -> None:
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #f472b6 !important; }
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(3) a { border-top-color: #fb923c !important; }
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(4) a { border-top-color: #f87171 !important; }
- 
+
             /* ---------- INFO / EXPANDER ---------- */
             div[data-testid="stExpander"] {
                 border: 1px solid #2b3a52 !important;
                 border-radius: 12px !important;
             }
- 
+
             /* ---------- WEATHER / K3 CARD ---------- */
             .k3-card {
                 background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
@@ -419,13 +308,13 @@ def inject_custom_style() -> None:
                 border: 1px solid #2b3a52;
                 height: 100%;
             }
- 
+
             .k3-card h4 {
                 margin-top: 0;
                 color: #38bdf8;
                 font-size: 1.02rem;
             }
- 
+
             .k3-card ul {
                 color: #cbd5e1;
                 font-size: 0.9rem;
@@ -433,7 +322,7 @@ def inject_custom_style() -> None:
                 margin-bottom: 0;
                 line-height: 1.6;
             }
- 
+
             .greeting-card {
                 background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
                 padding: 20px 22px;
@@ -444,12 +333,12 @@ def inject_custom_style() -> None:
             .greeting-emoji { font-size: 1.8rem; margin-bottom: 6px; display: inline-block; }
             .greeting-text { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin: 2px 0 4px 0; }
             .greeting-date { font-size: 0.9rem; color: #94a3b8; }
- 
+
             @media (max-width: 640px) {
                 .header-title { font-size: 1.5rem !important; }
                 .k3-card, .greeting-card { padding: 16px !important; }
             }
- 
+
             /* ---------- FOOTER ---------- */
             .footer-heading {
                 font-size: 1rem;
@@ -457,7 +346,7 @@ def inject_custom_style() -> None:
                 color: #f8fafc;
                 margin-bottom: 6px;
             }
- 
+
             .copyright-bar {
                 text-align: center;
                 color: #64748b;
@@ -470,12 +359,12 @@ def inject_custom_style() -> None:
         """,
         unsafe_allow_html=True,
     )
- 
- 
+
+
 # =============================================================================
 # BAGIAN-BAGIAN HALAMAN
 # =============================================================================
- 
+
 def render_header() -> None:
     st.markdown(
         """
@@ -490,8 +379,8 @@ def render_header() -> None:
         """,
         unsafe_allow_html=True,
     )
- 
- 
+
+
 def kpi_card(icon: str, label: str, value: str, delta: str) -> str:
     return f"""
     <div class="kpi-card">
@@ -501,8 +390,8 @@ def kpi_card(icon: str, label: str, value: str, delta: str) -> str:
         <span class="kpi-delta">↑ {delta}</span>
     </div>
     """
- 
- 
+
+
 def render_stats_banner() -> None:
     m1, m2, m3, m4 = st.columns(4)
     with m1:
@@ -513,8 +402,8 @@ def render_stats_banner() -> None:
         st.markdown(kpi_card("📄", "Format Dokumen", "DOCX / PDF", "Otomatis"), unsafe_allow_html=True)
     with m4:
         st.markdown(kpi_card("🔒", "Keamanan Validasi", "QR Code", "Encrypted"), unsafe_allow_html=True)
- 
- 
+
+
 def render_module_cards() -> None:
     st.markdown('<div class="section-heading">🚀 Pilih Modul Operasional</div>', unsafe_allow_html=True)
     st.markdown(
@@ -522,7 +411,7 @@ def render_module_cards() -> None:
         unsafe_allow_html=True,
     )
     col1, col2 = st.columns(2)
- 
+
     with col1:
         st.page_link(
             "pages/1_Generator_Surat.py",
@@ -563,7 +452,7 @@ def render_module_cards() -> None:
             icon="🔋",
             use_container_width=True,
         )
- 
+
     with col2:
         st.page_link(
             "pages/3_Clean_Data_Excel.py",
@@ -604,11 +493,11 @@ def render_module_cards() -> None:
             icon="⚖️",
             use_container_width=True,
         )
- 
- 
+
+
 def render_info_section() -> None:
     col_info1, col_info2 = st.columns(2)
- 
+
     with col_info1:
         st.info(
             """
@@ -619,7 +508,7 @@ def render_info_section() -> None:
               untuk *mail merge* di modul Generator Surat.
             """
         )
- 
+
     with col_info2:
         with st.expander("❓ Butuh Bantuan / Kendala Sistem?"):
             st.write(
@@ -630,30 +519,30 @@ def render_info_section() -> None:
                 3. Hubungi Admin Operasional IT unit terdekat.
                 """
             )
- 
- 
+
+
 def render_quick_links() -> None:
     st.markdown('<div class="section-heading">🔗 Akses Cepat Portal Resmi & Layanan PLN</div>', unsafe_allow_html=True)
     st.write("")
     col_link1, col_link2, col_link3 = st.columns(3)
- 
+
     with col_link1:
         st.link_button("🌐 Website Resmi PLN", "https://www.pln.co.id", use_container_width=True)
- 
+
     with col_link2:
         st.link_button("⚡ Portal Layanan & AP2T", "https://layanan.pln.co.id", use_container_width=True)
- 
+
     with col_link3:
         st.link_button(
             "📱 Unduh PLN Mobile",
             "https://play.google.com/store/apps/details?id=com.icon.pln123",
             use_container_width=True,
         )
- 
- 
+
+
 def render_footer() -> None:
     footer_col1, footer_col2, footer_col3 = st.columns([2, 2, 1])
- 
+
     with footer_col1:
         st.markdown(
             """
@@ -667,7 +556,7 @@ def render_footer() -> None:
             """,
             unsafe_allow_html=True,
         )
- 
+
     with footer_col2:
         st.markdown(
             """
@@ -685,7 +574,7 @@ def render_footer() -> None:
             "https://wa.me/6281933041691",
             use_container_width=True,
         )
- 
+
     with footer_col3:
         st.markdown(
             """
@@ -698,7 +587,7 @@ def render_footer() -> None:
             """,
             unsafe_allow_html=True,
         )
- 
+
     st.markdown(
         """
         <div class="copyright-bar">
@@ -707,22 +596,22 @@ def render_footer() -> None:
         """,
         unsafe_allow_html=True,
     )
- 
- 
+
+
 def render_quick_info_panel() -> None:
     st.markdown('<div class="section-heading">👋 Info Hari Ini</div>', unsafe_allow_html=True)
- 
+
     now = dt.datetime.now()
     greeting, emoji = get_greeting(now.hour)
     hari = HARI_ID[now.weekday()]
     bulan = BULAN_ID[now.month - 1]
     tanggal_lengkap = f"{hari}, {now.day} {bulan} {now.year}"
     pekan_ke = now.isocalendar()[1]
- 
+
     tip = K3_TIPS[dt.date.today().toordinal() % len(K3_TIPS)]
- 
+
     col_greet, col_tip = st.columns(2)
- 
+
     with col_greet:
         st.markdown(
             f"""
@@ -734,7 +623,7 @@ def render_quick_info_panel() -> None:
             """,
             unsafe_allow_html=True,
         )
- 
+
     with col_tip:
         st.markdown(
             f"""
@@ -745,57 +634,50 @@ def render_quick_info_panel() -> None:
             """,
             unsafe_allow_html=True,
         )
- 
- 
+
+
 def render_activity_trend() -> None:
     st.markdown('<div class="section-heading">📈 Tren Aktivitas & Pemantauan Operasional</div>', unsafe_allow_html=True)
     st.caption(
         "⚠️ Data di bawah ini masih **contoh/simulasi** — belum terhubung ke log penggunaan modul yang sebenarnya."
     )
- 
+
     # TODO: ganti dengan data log penggunaan modul yang sebenarnya
     chart_data = pd.DataFrame(
         np.random.randn(20, 3) + [10, 15, 20],
         columns=["Validasi P2TL", "Clean Data AP2T", "Generator Surat"],
     )
     st.line_chart(chart_data)
- 
- 
+
+
 # =============================================================================
 # RENDER HALAMAN
 # =============================================================================
- 
+
 def main() -> None:
     inject_custom_style()
- 
+
     render_header()
     render_quick_info_panel()
     st.divider()
- 
+
     render_stats_banner()
     st.divider()
- 
+
     render_module_cards()
     st.divider()
- 
+
     render_info_section()
     st.divider()
- 
+
     render_quick_links()
     st.divider()
- 
+
     render_footer()
     st.divider()
- 
+
     render_activity_trend()
- 
- 
+
+
 if __name__ == "__main__":
     main()
- 
-
-
-
-
-
-
