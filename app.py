@@ -1,8 +1,8 @@
+import datetime as dt
 import os
 
 import numpy as np
 import pandas as pd
-import requests
 import streamlit as st
 from PIL import Image
 
@@ -30,42 +30,34 @@ render_logout_button()
 
 load_custom_css()
 
-DAFTAR_LOKASI = {
-    "Surabaya": {"lat": -7.2575, "lon": 112.7521},
-    "Sidoarjo": {"lat": -7.4478, "lon": 112.7183},
-    "Gresik": {"lat": -7.1566, "lon": 112.6555},
-    "Malang": {"lat": -7.9839, "lon": 112.6214},
-    "Pasuruan": {"lat": -7.6453, "lon": 112.9075},
-    "Mojokerto": {"lat": -7.4726, "lon": 112.4381},
-    "Jakarta": {"lat": -6.2088, "lon": 106.8456},
-    "Bandung": {"lat": -6.9175, "lon": 107.6191},
-    "Semarang": {"lat": -6.9667, "lon": 110.4167},
-}
+HARI_ID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+BULAN_ID = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+]
 
-WEATHER_CODE_MAP = {
-    (0, 1): "Cerah / Berawan Tipis ☀️",
-    (2, 3): "Berawan / Mendung ⛅",
-    (51, 53, 55, 61, 63, 65): "Hujan Ringan / Sedang 🌧️",
-    (80, 81, 82, 95, 96, 99): "Hujan Lebat / Disertai Petir ⛈️",
-}
-
-
-def describe_weather_code(code: int) -> str:
-    for codes, desc in WEATHER_CODE_MAP.items():
-        if code in codes:
-            return desc
-    return "Kondisi Berawan 🌤️"
+K3_TIPS = [
+    "Selalu pasang Grounding Local sebelum menyentuh penghantar bertegangan.",
+    "Pastikan APD lengkap: Helm K3, Sarung Tangan Isolasi, dan Sepatu Safety sebelum bekerja di lapangan.",
+    "Tunda pekerjaan pemeliharaan jaringan terbuka saat hujan lebat atau petir.",
+    "Cek kondisi tangga dan alat kerja sebelum naik ke jaringan TM/TR.",
+    "Jangan pernah bekerja sendirian pada instalasi bertegangan — selalu gunakan sistem buddy.",
+    "Laporkan segera kabel kendor, tiang miring, atau gardu yang terlihat tidak normal.",
+    "Pastikan Alat Pelindung Diri (APD) diperiksa rutin, tidak ada yang robek atau rusak.",
+    "Gunakan alat uji tegangan sebelum menyatakan jaringan benar-benar padam.",
+    "Jaga jarak aman minimal dari jaringan Tegangan Menengah saat menggunakan alat panjang/logam.",
+    "Istirahat cukup sebelum shift lapangan — kelelahan adalah penyebab umum kecelakaan kerja.",
+]
 
 
-@st.cache_data(ttl=600, show_spinner=False)
-def fetch_current_weather(lat: float, lon: float) -> dict:
-    url = (
-        "https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}&current_weather=true"
-    )
-    response = requests.get(url, timeout=5)
-    response.raise_for_status()
-    return response.json()["current_weather"]
+def get_greeting(hour: int) -> tuple[str, str]:
+    if 4 <= hour < 11:
+        return "Selamat Pagi", "☀️"
+    if 11 <= hour < 15:
+        return "Selamat Siang", "🌤️"
+    if 15 <= hour < 18:
+        return "Selamat Sore", "🌇"
+    return "Selamat Malam", "🌙"
 
 
 # =============================================================================
@@ -331,6 +323,22 @@ def inject_custom_style() -> None:
                 line-height: 1.6;
             }
 
+            .greeting-card {
+                background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
+                padding: 20px 22px;
+                border-radius: 16px;
+                border: 1px solid #2b3a52;
+                height: 100%;
+            }
+            .greeting-emoji { font-size: 1.8rem; margin-bottom: 6px; display: inline-block; }
+            .greeting-text { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin: 2px 0 4px 0; }
+            .greeting-date { font-size: 0.9rem; color: #94a3b8; }
+
+            @media (max-width: 640px) {
+                .header-title { font-size: 1.5rem !important; }
+                .k3-card, .greeting-card { padding: 16px !important; }
+            }
+
             /* ---------- FOOTER ---------- */
             .footer-heading {
                 font-size: 1rem;
@@ -590,45 +598,42 @@ def render_footer() -> None:
     )
 
 
-def render_weather_widget() -> None:
-    st.markdown('<div class="section-heading">🌤️ Informasi Cuaca & Kesiapsiagaan Lapangan</div>', unsafe_allow_html=True)
-    st.write("")
-    col_weather, col_status = st.columns(2)
+def render_quick_info_panel() -> None:
+    st.markdown('<div class="section-heading">👋 Info Hari Ini</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-subheading">Ringan &amp; langsung tampil di semua perangkat — tanpa perlu memuat data dari luar.</div>',
+        unsafe_allow_html=True,
+    )
 
-    with col_weather:
-        kota_pilihan = st.selectbox(
-            "📍 Pilih Wilayah Operasional / ULP:",
-            list(DAFTAR_LOKASI.keys()),
-            index=0,
-        )
-        lokasi = DAFTAR_LOKASI[kota_pilihan]
+    now = dt.datetime.now()
+    greeting, emoji = get_greeting(now.hour)
+    hari = HARI_ID[now.weekday()]
+    bulan = BULAN_ID[now.month - 1]
+    tanggal_lengkap = f"{hari}, {now.day} {bulan} {now.year}"
+    pekan_ke = now.isocalendar()[1]
 
-        try:
-            current = fetch_current_weather(lokasi["lat"], lokasi["lon"])
-            temp = current["temperature"]
-            wind = current["windspeed"]
-            cuaca_desc = describe_weather_code(current["weathercode"])
+    tip = K3_TIPS[dt.date.today().toordinal() % len(K3_TIPS)]
 
-            w_col1, w_col2 = st.columns(2)
-            with w_col1:
-                st.markdown(kpi_card("🌡️", "Suhu Udara", f"{temp} °C", cuaca_desc.split(" ")[-1]), unsafe_allow_html=True)
-            with w_col2:
-                st.markdown(kpi_card("💨", "Kecepatan Angin", f"{wind} km/h", "Live"), unsafe_allow_html=True)
-            st.caption(f"Status saat ini: **{cuaca_desc}**")
+    col_greet, col_tip = st.columns(2)
 
-        except requests.RequestException:
-            st.warning("Gagal memuat data cuaca real-time. Pastikan server terhubung ke internet.")
-
-    with col_status:
+    with col_greet:
         st.markdown(
-            """
+            f"""
+            <div class="greeting-card">
+                <span class="greeting-emoji">{emoji}</span>
+                <div class="greeting-text">{greeting}!</div>
+                <div class="greeting-date">{tanggal_lengkap} &middot; Pukul {now.strftime('%H:%M')} &middot; Pekan ke-{pekan_ke}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_tip:
+        st.markdown(
+            f"""
             <div class="k3-card">
-                <h4>⚠️ Himbauan Keselamatan Kerja (K3)</h4>
-                <ul>
-                    <li><b>Hujan Lebat / Petir:</b> Tunda pekerjaan pemeliharaan pada jaringan Tegangan Menengah (TM) & TR terbuka.</li>
-                    <li><b>APD Lengkap:</b> Pastikan penggunaan Helm K3, Sarung Tangan Isolasi, dan Sepatu Safety.</li>
-                    <li><b>Gunakan SOP Grounding:</b> Selalu pasang <i>Grounding Local</i> sebelum menyentuh penghantar.</li>
-                </ul>
+                <h4>⚠️ Tips K3 Hari Ini</h4>
+                <ul><li>{tip}</li></ul>
             </div>
             """,
             unsafe_allow_html=True,
@@ -672,7 +677,7 @@ def main() -> None:
     render_footer()
     st.divider()
 
-    render_weather_widget()
+    render_quick_info_panel()
     st.divider()
 
     render_activity_trend()
