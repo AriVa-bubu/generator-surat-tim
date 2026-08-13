@@ -6,6 +6,7 @@ import requests
 import streamlit as st
 from PIL import Image
 
+from auth import check_login, render_logout_button
 from utils import load_custom_css
 
 # =============================================================================
@@ -22,6 +23,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Gerbang login — halaman berhenti di sini jika belum login
+check_login()
+render_logout_button()
 
 load_custom_css()
 
@@ -291,8 +296,11 @@ def inject_custom_style() -> None:
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(1) a { border-top-color: #38bdf8 !important; }
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #a78bfa !important; }
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(3) a { border-top-color: #fbbf24 !important; }
+            div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(4) a { border-top-color: #22d3ee !important; }
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(1) a { border-top-color: #4ade80 !important; }
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #f472b6 !important; }
+            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(3) a { border-top-color: #fb923c !important; }
+            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(4) a { border-top-color: #f87171 !important; }
 
             /* ---------- INFO / EXPANDER ---------- */
             div[data-testid="stExpander"] {
@@ -379,7 +387,7 @@ def kpi_card(icon: str, label: str, value: str, delta: str) -> str:
 def render_stats_banner() -> None:
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.markdown(kpi_card("🛠️", "Modul Aktif", "5 Modul", "Siap Pakai"), unsafe_allow_html=True)
+        st.markdown(kpi_card("🛠️", "Modul Aktif", "8 Modul", "Siap Pakai"), unsafe_allow_html=True)
     with m2:
         st.markdown(kpi_card("⚡", "Sistem AP2T", "Terhubung", "Online"), unsafe_allow_html=True)
     with m3:
@@ -426,6 +434,16 @@ def render_module_cards() -> None:
             icon="⚡",
             use_container_width=True,
         )
+        st.write("")
+        st.page_link(
+            "pages/7_Prediksi_Token_Prabayar.py",
+            label=(
+                "7. Prediksi Sisa Token Prabayar\n\n"
+                "Proyeksikan sisa token pelanggan prabayar dan rata-rata pemakaian harian dari riwayat pembelian."
+            ),
+            icon="🔋",
+            use_container_width=True,
+        )
 
     with col2:
         st.page_link(
@@ -445,6 +463,26 @@ def render_module_cards() -> None:
                 "Buat QR Code validasi dokumen/surat tugas secara otomatis yang dapat di-embed atau diunduh."
             ),
             icon="📱",
+            use_container_width=True,
+        )
+        st.write("")
+        st.page_link(
+            "pages/6_Deteksi_KWH_Macet.py",
+            label=(
+                "6. Deteksi kWh Macet\n\n"
+                "Deteksi stand meter yang tidak bergerak dari data DPP dan rekap status per pelanggan."
+            ),
+            icon="🔎",
+            use_container_width=True,
+        )
+        st.write("")
+        st.page_link(
+            "pages/8_Koreksi_Token_P2TL.py",
+            label=(
+                "8. Koreksi Token P2TL\n\n"
+                "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah."
+            ),
+            icon="⚖️",
             use_container_width=True,
         )
 
