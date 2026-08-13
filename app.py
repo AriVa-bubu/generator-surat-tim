@@ -369,6 +369,9 @@ def render_header() -> None:
     st.markdown(
         """
         <div class="header-banner">
+            <p style="margin: 0 0 12px 0; font-size: 0.8rem; color: #bae6fd; opacity: 0.85; position: relative; z-index: 1;">
+                Ringan &amp; langsung tampil di semua perangkat — tanpa perlu memuat data dari luar.
+            </p>
             <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.4.0</div>
             <h1 class="header-title">⚡ Portal Operasional & Layanan Digital PLN</h1>
             <p class="header-subtitle">
@@ -600,10 +603,6 @@ def render_footer() -> None:
 
 def render_quick_info_panel() -> None:
     st.markdown('<div class="section-heading">👋 Info Hari Ini</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="section-subheading">Ringan &amp; langsung tampil di semua perangkat — tanpa perlu memuat data dari luar.</div>',
-        unsafe_allow_html=True,
-    )
 
     now = dt.datetime.now()
     greeting, emoji = get_greeting(now.hour)
