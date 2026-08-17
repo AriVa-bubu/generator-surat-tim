@@ -9,6 +9,7 @@ import zipfile
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
 
 # =============================================================================
@@ -452,7 +453,8 @@ if excel_file and word_file:
 
                 zip_bytes = build_zip_archive(documents, is_pdf and has_pdf)
 
-                # Ambil byte PDF pertama jika ada
+                # Ambil base64 PDF pertama untuk fitur cetak langsung
+                first_pdf_b64 = None
                 first_pdf_bytes = None
                 first_pdf_name = "Sampel_Surat_1.pdf"
                 if has_pdf and len(documents) > 0:
@@ -460,13 +462,18 @@ if excel_file and word_file:
                     if os.path.exists(pdf_path):
                         with open(pdf_path, "rb") as f:
                             first_pdf_bytes = f.read()
+                            first_pdf_b64 = base64.b64encode(first_pdf_bytes).decode("utf-8")
                         first_pdf_name = f"Surat_{documents[0]['final_name']}.pdf"
 
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            # Menampilkan Tombol Unduh Berdampingan
-            col_dl1, col_dl2 = st.columns(2)
+            # Layout 3 Kolom Opsi Keluaran
+            if first_pdf_b64:
+                col_dl1, col_dl2, col_print = st.columns(3)
+            else:
+                col_dl1, col_dl2 = st.columns(2)
+                col_print = None
 
             with col_dl1:
                 st.download_button(
@@ -480,14 +487,72 @@ if excel_file and word_file:
             with col_dl2:
                 if first_pdf_bytes:
                     st.download_button(
-                        label="📄 UNDUH SAMPEL PDF (SIAP CETAK)",
+                        label="📄 UNDUH SAMPEL PDF",
                         data=first_pdf_bytes,
                         file_name=first_pdf_name,
                         mime="application/pdf",
                         use_container_width=True,
                     )
                 else:
-                    st.info("💡 Pilih **PDF Format** untuk mengaktifkan unduh PDF tunggal.")
+                    st.info("💡 Pilih **PDF Format** untuk mengaktifkan cetak.")
+
+            # Tombol Cetak / Ctrl+P
+            if col_print and first_pdf_b64:
+                with col_print:
+                    print_component = f"""
+                    <div style="width: 100%;">
+                        <button onclick="printPDF()" style="
+                            width: 100%;
+                            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                            color: white;
+                            font-weight: 700;
+                            border: none;
+                            border-radius: 10px;
+                            padding: 0.75rem 1rem;
+                            cursor: pointer;
+                            font-family: 'Plus Jakarta Sans', sans-serif;
+                            font-size: 14px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 8px;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        ">
+                            🖨️ CETAK SEKARANG (CTRL + P)
+                        </button>
+                    </div>
+
+                    <script>
+                    function printPDF() {{
+                        const base64Data = '{first_pdf_b64}';
+                        const blob = base64ToBlob(base64Data, 'application/pdf');
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        const iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = blobUrl;
+                        document.body.appendChild(iframe);
+
+                        iframe.onload = function() {{
+                            setTimeout(function() {{
+                                iframe.contentWindow.focus();
+                                iframe.contentWindow.print();
+                            }}, 100);
+                        }};
+                    }}
+
+                    function base64ToBlob(base64, type) {{
+                        const binStr = atob(base64);
+                        const len = binStr.length;
+                        const arr = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {{
+                            arr[i] = binStr.charCodeAt(i);
+                        }}
+                        return new Blob([arr], {{ type: type }});
+                    }}
+                    </script>
+                    """
+                    components.html(print_component, height=55)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
