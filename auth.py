@@ -9,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login pengguna dengan Full Background Gedung."""
+    """Memeriksa status login pengguna dengan UI Adaptif (Dark/Light)."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # CSS Custom: Background Full Gedung dengan Overlay Dark & Glassmorphism
+    # CSS Adaptif berdasarkan tema sistem/Streamlit
     st.markdown(
         """
         <style>
@@ -35,48 +35,43 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* Full Background Gambar Gedung + Dark Overlay */
-            .stApp {
-                background: linear-gradient(135deg, rgba(11, 15, 25, 0.88) 0%, rgba(9, 13, 22, 0.92) 100%),
-                            url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
-                background-size: cover !important;
-                background-position: center !important;
-                background-attachment: fixed !important;
+            /* Container Kiri & Kartu Adaptif */
+            .hero-container-adaptive {
+                background-color: var(--secondary-background-color);
+                border: 1px solid rgba(128, 128, 128, 0.2);
+                border-radius: 24px;
+                padding: 36px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             }
 
             .badge-status {
-                background: rgba(14, 165, 233, 0.25);
-                border: 1px solid rgba(56, 189, 248, 0.5);
-                color: #38bdf8;
+                background: rgba(14, 165, 233, 0.15);
+                border: 1px solid rgba(56, 189, 248, 0.4);
+                color: #0284c7;
                 font-weight: 700;
                 font-size: 0.75rem;
                 padding: 6px 14px;
                 border-radius: 30px;
                 display: inline-block;
                 margin-bottom: 12px;
-                backdrop-filter: blur(8px);
             }
 
-            /* Container Kiri Glassmorphism */
-            .hero-container {
-                background: rgba(15, 23, 42, 0.55);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                border-radius: 24px;
-                padding: 36px;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            .pln-hero-img {
+                width: 100%;
+                height: 190px;
+                object-fit: cover;
+                border-radius: 16px;
+                margin: 18px 0;
+                border: 1px solid rgba(128, 128, 128, 0.2);
             }
 
-            /* Form Login Sisi Kanan Glassmorphism */
+            /* Custom Styling Form Login */
             div[data-testid="stForm"] {
-                background: rgba(15, 23, 42, 0.75) !important;
-                backdrop-filter: blur(20px) !important;
-                -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                background-color: var(--secondary-background-color) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
                 border-radius: 24px !important;
                 padding: 32px !important;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
             }
 
             .stButton > button {
@@ -86,7 +81,7 @@ def check_login():
                 font-weight: 700 !important;
                 padding: 0.75rem 1.5rem !important;
                 font-size: 1rem !important;
-                box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.5) !important;
+                color: white !important;
             }
         </style>
         """,
@@ -97,22 +92,24 @@ def check_login():
     if not os.path.exists(logo_path):
         logo_path = "assets/logo_pln.png"
 
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     col_hero, col_login = st.columns([1.2, 1], gap="large")
 
     with col_hero:
         st.markdown(
             """
-            <div class="hero-container">
+            <div class="hero-container-adaptive">
                 <span class="badge-status">⚡ PORTAL OPERASIONAL INTEGRATED</span>
-                <h1 style="color: white; font-weight: 800; font-size: 2.2rem; margin-top: 10px; margin-bottom: 12px; line-height: 1.2;">
+                <h1 style="font-weight: 800; font-size: 2rem; margin-top: 10px; margin-bottom: 12px; line-height: 1.2;">
                     Sistem Manajemen & Pelayanan Listrik PLN
                 </h1>
-                <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.6; margin-bottom: 24px;">
-                    Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional secara <i>real-time</i>.
+                <p style="opacity: 0.8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px;">
+                    Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional.
                 </p>
-                <div style="color: #e2e8f0; font-size: 0.95rem; line-height: 2;">
+                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" 
+                     class="pln-hero-img" alt="Gedung PLN">
+                <div style="opacity: 0.9; font-size: 0.9rem; line-height: 1.8;">
                     ⚡ <b>Otomatisasi Document Generator</b> (Multi-halaman PDF)<br>
                     ⚡ <b>Kalkulator Akurat P2TL</b> & Rekomendasi Tarif<br>
                     ⚡ <b>Sistem Terenkripsi</b> & Akses Kontrol Terintegrasi
@@ -132,12 +129,12 @@ def check_login():
             )
 
         st.markdown(
-            "<h2 style='color: white; margin-bottom: 2px; font-weight:"
-            " 800;'>🔒 Selamat Datang</h2>",
+            "<h2 style='margin-bottom: 2px; font-weight: 800;'>🔒 Selamat"
+            " Datang</h2>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #94a3b8; font-size: 0.9rem; margin-bottom:"
+            "<p style='opacity: 0.7; font-size: 0.9rem; margin-bottom:"
             " 20px;'>Silakan masuk menggunakan akun resmi terdaftar.</p>",
             unsafe_allow_html=True,
         )
