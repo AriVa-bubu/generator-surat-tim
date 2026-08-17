@@ -1,4 +1,5 @@
 import hashlib
+import os
 import streamlit as st
 
 
@@ -8,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background Gedung & Form Login Menyatu Elegan."""
+    """Memeriksa status login dengan Full Background Gedung & Minimalist Login Card."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -24,10 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # URL Logo PLN Transparan Resmi (SVG/PNG)
-    pln_transparent_logo = "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
-
-    # Styling CSS Adaptif & Elegan
+    # CSS Custom: Modern Glassmorphism Centered Login
     st.markdown(
         """
         <style>
@@ -37,7 +35,7 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* Full Background Gambar Gedung Modern */
+            /* Full Background Gambar Gedung */
             .stApp {
                 background-size: cover !important;
                 background-position: center !important;
@@ -53,14 +51,14 @@ def check_login():
                 }
             }
 
-            /* Styling Form Login Glassmorphism Minimalis & Menyatu */
+            /* Styling Kartu Form Login Glassmorphism Centered */
             div[data-testid="stForm"] {
-                background: rgba(15, 23, 42, 0.75) !important;
+                background: rgba(15, 23, 42, 0.78) !important;
                 backdrop-filter: blur(20px) !important;
                 -webkit-backdrop-filter: blur(20px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.12) !important;
                 border-radius: 24px !important;
-                padding: 36px 32px 32px 32px !important;
+                padding: 40px 36px 32px 36px !important;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
             }
 
@@ -72,53 +70,54 @@ def check_login():
                 }
             }
 
-            /* Styling Logo PLN Tanpa Background Putih */
-            .pln-logo-container {
+            /* Logo Styling tanpa background putih ekstra */
+            .pln-logo-wrapper {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                margin-bottom: 16px;
+                margin-bottom: 20px;
             }
 
             .pln-logo-img {
-                height: 64px;
-                width: auto;
+                width: 72px;
+                height: auto;
                 object-fit: contain;
-                filter: drop-shadow(0px 6px 12px rgba(0, 0, 0, 0.4));
+                mix-blend-mode: multiply;
+                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
             }
 
-            /* Header Label di Dalam Form */
-            .login-header-title {
+            /* Header Title & Subtitle di dalam Card */
+            .login-card-title {
                 text-align: center;
+                font-size: 1.6rem;
                 font-weight: 800;
-                font-size: 1.5rem;
-                margin-bottom: 4px;
+                margin-bottom: 6px;
                 letter-spacing: -0.02em;
             }
 
-            .login-header-subtitle {
+            .login-card-subtitle {
                 text-align: center;
                 opacity: 0.8;
                 font-size: 0.88rem;
-                margin-bottom: 24px;
+                margin-bottom: 28px;
                 line-height: 1.4;
             }
 
-            /* Tombol Login Merah Elegan */
+            /* Tombol Login Merah Coral Modern (Bukan Biru) */
             .stButton > button {
-                background: linear-gradient(135deg, #ff4b4b 0%, #dc2626 100%) !important;
+                background: linear-gradient(135deg, #ff5252 0%, #ff3b30 100%) !important;
                 border: none !important;
                 border-radius: 12px !important;
                 font-weight: 700 !important;
                 padding: 0.75rem 1.5rem !important;
-                font-size: 1rem !important;
+                font-size: 0.98rem !important;
                 color: white !important;
-                box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.5) !important;
+                box-shadow: 0 10px 20px -5px rgba(255, 59, 48, 0.4) !important;
                 transition: all 0.2s ease !important;
             }
 
             .stButton > button:hover {
-                box-shadow: 0 12px 24px -4px rgba(220, 38, 38, 0.7) !important;
+                box-shadow: 0 12px 24px -4px rgba(255, 59, 48, 0.6) !important;
                 transform: translateY(-1px);
             }
         </style>
@@ -132,15 +131,20 @@ def check_login():
     _, col_center, _ = st.columns([1, 1.1, 1])
 
     with col_center:
+        # URL Logo PLN Resmi Clean
+        logo_url = (
+            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
+        )
+
         with st.form("login_form"):
-            # Header & Logo PLN Transparan Dimasukkan ke Dalam Form
+            # Logo, Judul & Subtitle dimasukkan ke dalam Form Card agar menyatu rapi
             st.markdown(
                 f"""
-                <div class="pln-logo-container">
-                    <img src="{pln_transparent_logo}" class="pln-logo-img" alt="Logo PLN">
+                <div class="pln-logo-wrapper">
+                    <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
                 </div>
-                <h2 class="login-header-title">🔒 Selamat Datang</h2>
-                <p class="login-header-subtitle">Sistem Manajemen & Pelayanan Listrik PLN</p>
+                <h2 class="login-card-title">🔒 Selamat Datang</h2>
+                <p class="login-card-subtitle">Sistem Manajemen & Pelayanan Listrik PLN</p>
                 """,
                 unsafe_allow_html=True,
             )
