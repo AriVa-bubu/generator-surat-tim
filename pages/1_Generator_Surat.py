@@ -10,7 +10,6 @@ import zipfile
 import pandas as pd
 import streamlit as st
 from docxtpl import DocxTemplate
-from pypdf import PdfWriter  # Ditambahkan untuk fitur cetak gabungan PDF
 
 # =============================================================================
 # HELPERS
@@ -51,20 +50,6 @@ def check_libreoffice_available() -> bool:
     return shutil.which("libreoffice") is not None
 
 
-def merge_pdfs_to_bytes(documents: list) -> bytes:
-    """Menggabungkan seluruh file PDF hasil generate menjadi 1 file tunggal untuk dicetak."""
-    merger = PdfWriter()
-    for doc in documents:
-        pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
-        if os.path.exists(pdf_path):
-            merger.append(pdf_path)
-
-    output_stream = io.BytesIO()
-    merger.write(output_stream)
-    merger.close()
-    return output_stream.getvalue()
-
-
 # =============================================================================
 # KONFIGURASI HALAMAN & STYLE
 # =============================================================================
@@ -78,10 +63,12 @@ st.set_page_config(
     layout="wide",
 )
 
-from auth import check_login, render_logout_button
-
-check_login()
-render_logout_button()
+try:
+    from auth import check_login, render_logout_button
+    check_login()
+    render_logout_button()
+except ImportError:
+    pass
 
 st.markdown(
     """
@@ -238,7 +225,7 @@ with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
         1. **Upload File Excel**: Pastikan kolom header berada di baris paling atas.
         2. **Upload Template Word**: Gunakan tag `{{ NAMA_KOLOM }}` di dalam file `.docx`.
         3. **Pilihan Folder**: Pilih kolom `TANGGAL` atau `ULP` untuk mengelompokkan hasil ke sub-folder digital di dalam ZIP.
-        4. **Output PDF & Cetak**: Cetak dokumen langsung ke printer atau unduh arsip ZIP.
+        4. **Output PDF & Cetak**: Cetak dokumen atau unduh hasil pengarsipan ZIP.
         """
     )
 
@@ -346,7 +333,6 @@ def render_options(df: pd.DataFrame):
 
 
 def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: str, folder_column: str, temp_dir: str):
-    """Render semua surat .docx ke temp_dir. Return daftar metadata tiap dokumen."""
     documents = []
     used_names: dict = {}
     total_rows = len(df)
@@ -391,7 +377,6 @@ def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: st
 
 
 def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
-    """Konversi semua .docx ke .pdf dalam SATU panggilan LibreOffice."""
     docx_paths = [doc["temp_docx_path"] for doc in documents]
     if not docx_paths:
         return
@@ -460,70 +445,39 @@ if excel_file and word_file:
             with tempfile.TemporaryDirectory() as temp_dir:
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
-                # Jika memilih DOCX tapi ingin fitur cetak, tetap konversi PDF secara background
-                needs_pdf = is_pdf or check_libreoffice_available()
-
-                if needs_pdf:
+                if is_pdf and check_libreoffice_available():
                     status_text = st.empty()
-                    status_text.text("⏳ Mengonversi dokumen ke PDF untuk pengarsipan / pencetakan...")
+                    status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
                     convert_batch_to_pdf(documents, temp_dir)
                     status_text.empty()
 
                 zip_bytes = build_zip_archive(documents, is_pdf)
 
-                # Gabungkan seluruh PDF untuk fitur cetak langsung
-                merged_pdf_bytes = merge_pdfs_to_bytes(documents) if check_libreoffice_available() else None
+                # Ambil sampel dokumen pertama untuk preview cetak (jika PDF)
+                first_pdf_b64 = None
+                if is_pdf and check_libreoffice_available() and len(documents) > 0:
+                    first_pdf_path = os.path.splitext(documents[0]["temp_docx_path"])[0] + ".pdf"
+                    if os.path.exists(first_pdf_path):
+                        with open(first_pdf_path, "rb") as f:
+                            first_pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
 
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            col_dl, col_print = st.columns(2)
+            st.download_button(
+                label="⬇️ UNDUH ARSIP SURAT (.ZIP)",
+                data=zip_bytes,
+                file_name=f"Arsip_Surat_PLN_{'PDF' if is_pdf else 'DOCX'}.zip",
+                mime="application/zip",
+                use_container_width=True,
+            )
 
-            with col_dl:
-                st.download_button(
-                    label="⬇️ UNDUH ARSIP SURAT (.ZIP)",
-                    data=zip_bytes,
-                    file_name=f"Arsip_Surat_PLN_{'PDF' if is_pdf else 'DOCX'}.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                )
-
-            with col_print:
-                if merged_pdf_bytes:
-                    b64_pdf = base64.b64encode(merged_pdf_bytes).decode("utf-8")
-
-                    # Tombol Pemicu Dialog Cetak Browser
-                    st.markdown(
-                        f"""
-                        <a href="data:application/pdf;base64,{b64_pdf}" download="Semua_Surat_Siap_Cetak.pdf" target="_blank" style="text-decoration: none;">
-                            <button style="
-                                width: 100%;
-                                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-                                color: white;
-                                border: none;
-                                border-radius: 10px;
-                                font-weight: 700;
-                                padding: 0.75rem 1.5rem;
-                                cursor: pointer;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 8px;">
-                                🖨️ CETAK / PRATINJAU DOKUMEN
-                            </button>
-                        </a>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.warning("⚠️ Fitur cetak langsung memerlukan LibreOffice di server.")
-
-            # Menampilkan preview PDF interaktif dengan tombol cetak bawaan
-            if merged_pdf_bytes:
+            if first_pdf_b64:
                 st.markdown("<br>", unsafe_allow_html=True)
-                with st.expander("📄 **Pratinjau Dokumen Gabungan Sebelum Dicetak**", expanded=True):
-                    pdf_display = f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="700" type="application/pdf"></iframe>'
-                    st.markdown(pdf_display, unsafe_allow_html=True)
+                st.markdown("##### 🖨️ Pratinjau Dokumen Siap Cetak")
+                st.markdown("Gunakan tombol cetak bawaan di dalam viewer dokumen di bawah ini untuk mencetak langsung ke printer:")
+                pdf_display = f'<iframe src="data:application/pdf;base64,{first_pdf_b64}" width="100%" height="600" type="application/pdf"></iframe>'
+                st.markdown(pdf_display, unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
