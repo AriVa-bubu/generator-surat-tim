@@ -453,7 +453,6 @@ if excel_file and word_file:
 
                 zip_bytes = build_zip_archive(documents, is_pdf and has_pdf)
 
-                # Ambil base64 PDF pertama untuk fitur cetak langsung
                 first_pdf_b64 = None
                 first_pdf_bytes = None
                 first_pdf_name = "Sampel_Surat_1.pdf"
@@ -468,7 +467,6 @@ if excel_file and word_file:
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            # Layout 3 Kolom Opsi Keluaran
             if first_pdf_b64:
                 col_dl1, col_dl2, col_print = st.columns(3)
             else:
@@ -496,12 +494,11 @@ if excel_file and word_file:
                 else:
                     st.info("💡 Pilih **PDF Format** untuk mengaktifkan cetak.")
 
-            # Tombol Cetak / Ctrl+P
             if col_print and first_pdf_b64:
                 with col_print:
                     print_component = f"""
                     <div style="width: 100%;">
-                        <button onclick="printPDF()" style="
+                        <button onclick="cetakPDF()" style="
                             width: 100%;
                             background: linear-gradient(135deg, #059669 0%, #047857 100%);
                             color: white;
@@ -523,32 +520,24 @@ if excel_file and word_file:
                     </div>
 
                     <script>
-                    function printPDF() {{
+                    function cetakPDF() {{
                         const base64Data = '{first_pdf_b64}';
-                        const blob = base64ToBlob(base64Data, 'application/pdf');
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        const iframe = document.createElement('iframe');
-                        iframe.style.display = 'none';
-                        iframe.src = blobUrl;
-                        document.body.appendChild(iframe);
-
-                        iframe.onload = function() {{
-                            setTimeout(function() {{
-                                iframe.contentWindow.focus();
-                                iframe.contentWindow.print();
-                            }}, 100);
-                        }};
-                    }}
-
-                    function base64ToBlob(base64, type) {{
-                        const binStr = atob(base64);
-                        const len = binStr.length;
-                        const arr = new Uint8Array(len);
-                        for (let i = 0; i < len; i++) {{
-                            arr[i] = binStr.charCodeAt(i);
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {{
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                         }}
-                        return new Blob([arr], {{ type: type }});
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], {{type: 'application/pdf'}});
+                        const fileURL = URL.createObjectURL(blob);
+                        
+                        // Buka PDF di jendela baru lalu buka dialog cetak
+                        const printWindow = window.open(fileURL, '_blank');
+                        if (printWindow) {{
+                            printWindow.focus();
+                        }} else {{
+                            alert('Mohon izinkan pop-up di browser kamu untuk membuka jendela cetak!');
+                        }}
                     }}
                     </script>
                     """
