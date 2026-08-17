@@ -9,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login pengguna dengan UI Modern & Background Hero."""
+    """Memeriksa status login pengguna dengan Background Elegan khas PLN."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # Styling CSS Kustom untuk Portal Login
+    # Styling CSS Kustom untuk Background Elegan & Card Glassmorphism
     st.markdown(
         """
         <style>
@@ -35,80 +35,107 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* Container Utama Login Card */
+            /* Background Elegan Gradien Mesh PLN Dark Theme */
+            .stApp {
+                background: radial-gradient(circle at 15% 20%, rgba(14, 165, 233, 0.15) 0%, transparent 45%),
+                            radial-gradient(circle at 85% 80%, rgba(3, 105, 161, 0.2) 0%, transparent 50%),
+                            radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, #090d16 100%) !important;
+                background-attachment: fixed !important;
+            }
+
+            /* Container Kartu Kiri (Hero) */
             .login-hero-card {
-                background: linear-gradient(135deg, #0b2545 0%, #134074 60%, #00a8e8 100%);
-                border-radius: 20px;
+                background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7));
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(56, 189, 248, 0.2);
+                border-radius: 24px;
                 padding: 32px;
                 color: white;
-                box-shadow: 0 20px 40px rgba(0, 168, 232, 0.15);
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            }
+
+            .pln-hero-img-container {
+                position: relative;
+                overflow: hidden;
+                border-radius: 16px;
+                margin: 20px 0;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
 
             .pln-hero-img {
                 width: 100%;
-                border-radius: 14px;
+                height: 200px;
                 object-fit: cover;
-                height: 180px;
-                margin-top: 15px;
-                margin-bottom: 20px;
-                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+                display: block;
+                transition: transform 0.5s ease;
+            }
+
+            .pln-hero-img-container:hover .pln-hero-img {
+                transform: scale(1.03);
             }
 
             .badge-status {
-                background-color: rgba(255, 255, 255, 0.15);
-                backdrop-filter: blur(8px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: #ffb703;
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(2, 132, 199, 0.3));
+                border: 1px solid rgba(56, 189, 248, 0.4);
+                color: #38bdf8;
                 font-weight: 700;
                 font-size: 0.75rem;
                 padding: 6px 14px;
                 border-radius: 30px;
                 display: inline-block;
-                margin-bottom: 12px;
+                margin-bottom: 14px;
+                letter-spacing: 0.5px;
             }
 
             .feature-list {
                 list-style: none;
                 padding: 0;
-                margin: 15px 0 0 0;
+                margin: 18px 0 0 0;
                 font-size: 0.88rem;
-                color: #e2e8f0;
+                color: #cbd5e1;
             }
 
             .feature-list li {
-                margin-bottom: 8px;
+                margin-bottom: 10px;
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
             }
 
-            /* Form Card Sisi Kanan */
+            /* Container Form Sisi Kanan */
             div[data-testid="stForm"] {
-                background-color: #0f172a !important;
-                border: 1px solid #1e293b !important;
-                border-radius: 20px !important;
-                padding: 28px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+                background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85)) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                border-radius: 24px !important;
+                padding: 32px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
             }
 
             .login-header-title {
-                font-size: 1.6rem;
+                font-size: 1.75rem;
                 font-weight: 800;
                 color: #f8fafc;
+                margin-top: 8px;
                 margin-bottom: 4px;
+                letter-spacing: -0.5px;
             }
 
             .login-header-sub {
                 color: #94a3b8;
                 font-size: 0.88rem;
-                margin-bottom: 20px;
+                margin-bottom: 24px;
             }
 
-            /* Custom Button Login */
+            /* Custom Styling Input & Button Login */
+            .stTextInput > div > div {
+                border-radius: 12px !important;
+                background-color: rgba(15, 23, 42, 0.6) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            }
+
             .stButton > button {
                 background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
                 border: none !important;
@@ -116,6 +143,13 @@ def check_login():
                 font-weight: 700 !important;
                 padding: 0.75rem 1.5rem !important;
                 font-size: 1rem !important;
+                box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.5) !important;
+                transition: all 0.3s ease !important;
+            }
+
+            .stButton > button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 25px -5px rgba(2, 132, 199, 0.7) !important;
             }
         </style>
         """,
@@ -127,7 +161,10 @@ def check_login():
     if not os.path.exists(logo_path):
         logo_path = "assets/logo_pln.png"
 
-    # Layout 2 Kolom (Sisi Kiri Banner/Gedung, Sisi Kanan Form Login)
+    # Alignment Spacing Atas
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+
+    # Layout 2 Kolom
     col_hero, col_login = st.columns([1.1, 1], gap="large")
 
     with col_hero:
@@ -136,30 +173,24 @@ def check_login():
             <div class="login-hero-card">
                 <div>
                     <span class="badge-status">⚡ PORTAL OPERASIONAL INTEGRATED</span>
-                    <h2 style="margin: 0; font-weight: 800; font-size: 1.8rem;">Sistem Manajemen & Pelayanan Listrik PLN</h2>
-                    <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 8px;">
+                    <h2 style="margin: 0; font-weight: 800; font-size: 1.85rem; line-height: 1.2; color: #ffffff;">
+                        Sistem Manajemen & Pelayanan Listrik PLN
+                    </h2>
+                    <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px; line-height: 1.5;">
                         Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional.
                     </p>
                 </div>
-            """,
-            unsafe_allow_html=True,
-        )
+                
+                <div class="pln-hero-img-container">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" 
+                         class="pln-hero-img" alt="Gedung PLN Operational Center">
+                </div>
 
-        # Gambar Gedung Operasional PLN / Infrastruktur Kelistrikan (Unsplash High Quality)
-        st.markdown(
-            '<img'
-            ' src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop"'
-            ' class="pln-hero-img" alt="Gedung PLN Operational Center">',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            """
                 <div>
                     <ul class="feature-list">
-                        <li>✅ Otomatisasi Generator Surat & Dokumen Multi-Halaman</li>
-                        <li>✅ Kalkulator Akurat P2TL & Rekomendasi Konversi</li>
-                        <li>✅ Sistem Aman dengan Proteksi Akses Berlapis</li>
+                        <li>⚡ Otomatisasi Generator Surat & Dokumen Multi-Halaman</li>
+                        <li>⚡ Kalkulator Akurat P2TL & Rekomendasi Konversi</li>
+                        <li>⚡ Sistem Keamanan Akses Terenkripsi & Terintegrasi</li>
                     </ul>
                 </div>
             </div>
@@ -170,11 +201,11 @@ def check_login():
     with col_login:
         # Menampilkan Logo PLN
         if os.path.exists(logo_path):
-            st.image(logo_path, width=110)
+            st.image(logo_path, width=100)
         else:
             st.image(
                 "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png",
-                width=100,
+                width=95,
             )
 
         st.markdown(
