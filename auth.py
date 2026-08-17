@@ -1,19 +1,6 @@
-import base64
 import hashlib
 import os
 import streamlit as st
-
-
-def get_image_base64(path_to_file: str) -> str:
-    """Mengubah file gambar lokal menjadi string Base64 untuk tag HTML img."""
-    if os.path.exists(path_to_file):
-        with open(path_to_file, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-            ext = os.path.splitext(path_to_file)[1].replace(".", "")
-            if ext == "svg":
-                ext = "svg+xml"
-            return f"data:image/{ext};base64,{encoded_string}"
-    return ""
 
 
 def make_hash(password: str) -> str:
@@ -22,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background & Dual Logo Terintegrasi (PLN & Danantara)."""
+    """Memeriksa status login dengan Full Background Gedung & Minimalist Login Card."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -38,25 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # Cek & Load Logo Lokal (PLN & Danantara)
-    pln_path = (
-        "logo_pln.png"
-        if os.path.exists("logo_pln.png")
-        else "assets/logo_pln.png"
-    )
-    danantara_path = (
-        "logo_danantara.png"
-        if os.path.exists("logo_danantara.png")
-        else "assets/logo_danantara.png"
-    )
-
-    pln_src = (
-        get_image_base64(pln_path)
-        or "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
-    )
-    danantara_src = get_image_base64(danantara_path)
-
-    # Styling CSS Adaptif Tema (Dark & Light Mode)
+    # CSS Custom: Modern Glassmorphism Centered Login
     st.markdown(
         """
         <style>
@@ -82,14 +51,14 @@ def check_login():
                 }
             }
 
-            /* Styling Form Login Glassmorphism */
+            /* Styling Kartu Form Login Glassmorphism Centered */
             div[data-testid="stForm"] {
                 background: rgba(15, 23, 42, 0.75) !important;
                 backdrop-filter: blur(20px) !important;
                 -webkit-backdrop-filter: blur(20px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-radius: 24px !important;
-                padding: 36px 32px !important;
+                padding: 40px 36px !important;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
             }
 
@@ -101,49 +70,19 @@ def check_login():
                 }
             }
 
-            /* Container & Wadah Logo Rapi */
-            .logo-header-wrapper {
+            /* Logo Styling */
+            .pln-logo-wrapper {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 16px;
-                margin-bottom: 24px;
+                margin-bottom: 20px;
             }
 
-            .logo-box {
-                background: rgba(255, 255, 255, 0.95);
-                padding: 8px 14px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                height: 48px;
-            }
-
-            .logo-pln {
-                height: 36px;
-                width: auto;
+            .pln-logo-img {
+                width: 80px;
+                height: auto;
                 object-fit: contain;
-            }
-
-            .logo-danantara {
-                height: 28px;
-                width: auto;
-                object-fit: contain;
-            }
-
-            .logo-divider {
-                width: 1px;
-                height: 32px;
-                background-color: rgba(255, 255, 255, 0.3);
-            }
-
-            @media (prefers-color-scheme: light) {
-                .logo-divider {
-                    background-color: rgba(0, 0, 0, 0.2);
-                }
+                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
             }
 
             /* Tombol Login */
@@ -162,23 +101,25 @@ def check_login():
         unsafe_allow_html=True,
     )
 
-    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+    logo_path = "logo_pln.png"
+    if not os.path.exists(logo_path):
+        logo_path = "assets/logo_pln.png"
+
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
     # Layout Terpusat (Centered 1 Kolom)
     _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        # Menampilkan Logo PLN dan Danantara dalam Card Rapi
+        # Menampilkan Logo PLN Transparan & Rapi
+        logo_url = (
+            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
+        )
+
         st.markdown(
             f"""
-            <div class="logo-header-wrapper">
-                <div class="logo-box">
-                    <img src="{pln_src}" class="logo-pln" alt="Logo PLN">
-                </div>
-                <div class="logo-divider"></div>
-                <div class="logo-box">
-                    <img src="{danantara_src}" class="logo-danantara" alt="Logo Danantara">
-                </div>
+            <div class="pln-logo-wrapper">
+                <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
             </div>
             """,
             unsafe_allow_html=True,
@@ -190,7 +131,7 @@ def check_login():
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='text-align: center; opacity: 0.8; font-size: 0.88rem;"
+            "<p style='text-align: center; opacity: 0.8; font-size: 0.9rem;"
             " margin-bottom: 24px;'>Sistem Manajemen & Pelayanan Listrik"
             " PLN</p>",
             unsafe_allow_html=True,
