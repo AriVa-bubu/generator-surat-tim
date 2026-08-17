@@ -12,16 +12,13 @@ import streamlit as st
 import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
 
-# Try import pypdf / PyPDF2 safely
+# Safe import pypdf
 try:
     from pypdf import PdfMerger  # type: ignore
     HAS_PYPDF = True
 except ImportError:
-    try:
-        from PyPDF2 import PdfMerger  # type: ignore
-        HAS_PYPDF = True
-    except ImportError:
-        HAS_PYPDF = False
+    HAS_PYPDF = False
+
 # =============================================================================
 # HELPERS
 # =============================================================================
@@ -396,34 +393,28 @@ if excel_file and word_file:
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
                 has_pdf = False
-                pdf_base64_list = []
+                merged_pdf_b64 = ""
 
                 if is_pdf and check_libreoffice_available():
                     try:
                         status_text = st.empty()
                         status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
                         convert_batch_to_pdf(documents, temp_dir)
-                        
+
                         if HAS_PYPDF:
-                            status_text.text("⏳ Menggabungkan PDF...")
+                            status_text.text("⏳ Menggabungkan seluruh PDF untuk siap cetak...")
                             merger = PdfMerger()
                             for doc in documents:
                                 pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
                                 if os.path.exists(pdf_path):
                                     merger.append(pdf_path)
-                            merged_output = os.path.join(temp_dir, "MERGED.pdf")
+
+                            merged_output = os.path.join(temp_dir, "SEMUA_SURAT_MERGED.pdf")
                             merger.write(merged_output)
                             merger.close()
-                            
+
                             with open(merged_output, "rb") as f:
-                                pdf_base64_list.append(base64.b64encode(f.read()).decode("utf-8"))
-                        else:
-                            # Read all PDFs into Base64 array
-                            for doc in documents:
-                                pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
-                                if os.path.exists(pdf_path):
-                                    with open(pdf_path, "rb") as f:
-                                        pdf_base64_list.append(base64.b64encode(f.read()).decode("utf-8"))
+                                merged_pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
 
                         status_text.empty()
                         has_pdf = True
@@ -435,7 +426,7 @@ if excel_file and word_file:
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            if pdf_base64_list:
+            if merged_pdf_b64:
                 col_dl1, col_print = st.columns(2)
             else:
                 col_dl1 = st.container()
@@ -450,13 +441,12 @@ if excel_file and word_file:
                     use_container_width=True,
                 )
 
-            if col_print and pdf_base64_list:
-                import json
-                pdf_json = json.dumps(pdf_base64_list)
+            # Tombol Cetak Gabungan Multi-Halaman
+            if col_print and merged_pdf_b64:
                 with col_print:
                     print_component = f"""
                     <div style="width: 100%;">
-                        <button onclick="cetakSemua()" style="
+                        <button onclick="cetakSemuaPDF()" style="
                             width: 100%;
                             background: linear-gradient(135deg, #059669 0%, #047857 100%);
                             color: white;
@@ -478,21 +468,23 @@ if excel_file and word_file:
                     </div>
 
                     <script>
-                    function cetakSemua() {{
-                        const pdfs = {pdf_json};
-                        pdfs.forEach((b64, idx) => {{
-                            setTimeout(() => {{
-                                const binStr = atob(b64);
-                                const arr = new Uint8Array(binStr.length);
-                                for (let i = 0; i < binStr.length; i++) {{
-                                    arr[i] = binStr.charCodeAt(i);
-                                }}
-                                const blob = new Blob([arr], {{ type: 'application/pdf' }});
-                                const url = URL.createObjectURL(blob);
-                                const win = window.open(url, '_blank');
-                                if (win) win.focus();
-                            }}, idx * 400);
-                        }});
+                    function cetakSemuaPDF() {{
+                        const base64Data = '{merged_pdf_b64}';
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {{
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }}
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], {{type: 'application/pdf'}});
+                        const fileURL = URL.createObjectURL(blob);
+
+                        const win = window.open(fileURL, '_blank');
+                        if (win) {{
+                            win.focus();
+                        }} else {{
+                            alert('Mohon izinkan pop-up di browser!');
+                        }}
                     }}
                     </script>
                     """
