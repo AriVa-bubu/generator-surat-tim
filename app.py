@@ -47,6 +47,58 @@ K3_TIPS = [
     "Istirahat cukup sebelum shift lapangan — kelelahan adalah penyebab umum kecelakaan kerja.",
 ]
 
+# =============================================================================
+# DATA MODUL (dipakai untuk render & pencarian)
+# =============================================================================
+
+MODULES = [
+    {
+        "no": 1, "file": "pages/1_Generator_Surat.py", "icon": "✉️",
+        "title": "Generator Surat & Arsip (ZIP)",
+        "desc": "Buat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara massal dari data Excel.",
+    },
+    {
+        "no": 2, "file": "pages/2_Hitung_P2TL.py", "icon": "🧮",
+        "title": "Kalkulator Simulasi P2TL",
+        "desc": "Hitung perkiraan tagihan susulan P2TL berdasarkan golongan tarif, jam nyala, dan pemakaian.",
+    },
+    {
+        "no": 3, "file": "pages/3_Clean_Data_Excel.py", "icon": "🧹",
+        "title": "Validator & Cleaning Data Excel",
+        "desc": "Bersihkan data mentah AP2T: Format otomatis mata uang (Rp), IDPEL 12 digit, dan standarisasi.",
+    },
+    {
+        "no": 4, "file": "pages/4_Generator_QR.py", "icon": "📱",
+        "title": "Generator QR Code Validasi",
+        "desc": "Buat QR Code validasi dokumen/surat tugas secara otomatis yang dapat di-embed atau diunduh.",
+    },
+    {
+        "no": 5, "file": "pages/5_Kalkulator_Tambah_Daya.py", "icon": "⚡",
+        "title": "Kalkulator Tambah Daya (PB/NJ)",
+        "desc": "Hitung estimasi Biaya Penyambungan (BP), UJL, dan total biaya tambah daya pelanggan.",
+    },
+    {
+        "no": 6, "file": "pages/6_Deteksi_KWH_Macet.py", "icon": "🔎",
+        "title": "Deteksi kWh Macet",
+        "desc": "Deteksi stand meter yang tidak bergerak dari data DPP dan rekap status per pelanggan.",
+    },
+    {
+        "no": 7, "file": "pages/7_Prediksi_Token_Prabayar.py", "icon": "🔋",
+        "title": "Prediksi Sisa Token Prabayar",
+        "desc": "Proyeksikan sisa token pelanggan prabayar dan rata-rata pemakaian harian dari riwayat pembelian.",
+    },
+    {
+        "no": 8, "file": "pages/8_Koreksi_Token_P2TL.py", "icon": "⚖️",
+        "title": "Koreksi Token P2TL",
+        "desc": "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah.",
+    },
+    {
+        "no": 9, "file": "pages/9_Kalkulator_Konversi_Listrik.py", "icon": "🔌",
+        "title": "Kalkulator Konversi Listrik",
+        "desc": "Konversi cepat Tegangan × Arus menjadi Daya (Watt) dan Energi (kWh) untuk perhitungan lapangan.",
+    },
+]
+
 
 def get_greeting(hour: int) -> tuple[str, str]:
     if 4 <= hour < 11:
@@ -158,55 +210,6 @@ def inject_custom_style() -> None:
                 z-index: 1;
             }
 
-            /* ---------- KPI CARDS ---------- */
-            .kpi-card {
-                background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
-                border: 1px solid #2b3a52;
-                border-radius: 16px;
-                padding: 18px 20px;
-                height: 100%;
-                transition: all 0.25s ease;
-            }
-
-            .kpi-card:hover {
-                border-color: #38bdf8;
-                transform: translateY(-3px);
-                box-shadow: 0 10px 22px -6px rgba(56, 189, 248, 0.25);
-            }
-
-            .kpi-icon {
-                font-size: 1.4rem;
-                margin-bottom: 8px;
-                display: inline-block;
-            }
-
-            .kpi-label {
-                font-size: 0.78rem;
-                color: #94a3b8;
-                text-transform: uppercase;
-                font-weight: 700;
-                letter-spacing: 0.03em;
-            }
-
-            .kpi-value {
-                font-size: 1.55rem;
-                font-weight: 800;
-                color: #f8fafc;
-                margin: 4px 0 8px 0;
-            }
-
-            .kpi-delta {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                font-size: 0.75rem;
-                font-weight: 700;
-                color: #4ade80;
-                background: rgba(74, 222, 128, 0.12);
-                padding: 3px 9px;
-                border-radius: 999px;
-            }
-
             /* ---------- SECTION HEADING ---------- */
             .section-heading {
                 font-size: 1.3rem;
@@ -281,16 +284,6 @@ def inject_custom_style() -> None:
                 font-size: 1.9rem !important;
                 line-height: 1 !important;
             }
-
-            /* Aksen warna berbeda tiap kartu modul */
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(1) a { border-top-color: #38bdf8 !important; }
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #a78bfa !important; }
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(3) a { border-top-color: #fbbf24 !important; }
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stPageLink"]:nth-of-type(4) a { border-top-color: #22d3ee !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(1) a { border-top-color: #4ade80 !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(2) a { border-top-color: #f472b6 !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(3) a { border-top-color: #fb923c !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stPageLink"]:nth-of-type(4) a { border-top-color: #f87171 !important; }
 
             /* ---------- INFO / EXPANDER ---------- */
             div[data-testid="stExpander"] {
@@ -367,11 +360,11 @@ def render_header() -> None:
     st.markdown(
         """
         <div class="header-banner">
-            <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.4.0</div>
+            <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.5.0</div>
             <h1 class="header-title">⚡ Portal Operasional & Layanan Digital PLN</h1>
             <p class="header-subtitle">
                 Pusat otomasi kerja harian PLN: Pembuatan Surat Massal, P2TL, Validasi Excel,
-                QR Code Generator & Kalkulator Tambah Daya — semua dalam satu platform.
+                QR Code Generator, Kalkulator Tambah Daya, & Konversi Listrik — semua dalam satu platform.
             </p>
         </div>
         """,
@@ -379,118 +372,81 @@ def render_header() -> None:
     )
 
 
-def kpi_card(icon: str, label: str, value: str, delta: str) -> str:
-    return f"""
-    <div class="kpi-card">
-        <div class="kpi-icon">{icon}</div>
-        <div class="kpi-label">{label}</div>
-        <div class="kpi-value">{value}</div>
-        <span class="kpi-delta">↑ {delta}</span>
-    </div>
-    """
+def render_quick_info_panel() -> None:
+    st.markdown('<div class="section-heading">👋 Info Hari Ini</div>', unsafe_allow_html=True)
+
+    now = dt.datetime.now()
+    greeting, emoji = get_greeting(now.hour)
+    hari = HARI_ID[now.weekday()]
+    bulan = BULAN_ID[now.month - 1]
+    tanggal_lengkap = f"{hari}, {now.day} {bulan} {now.year}"
+    pekan_ke = now.isocalendar()[1]
+
+    tip = K3_TIPS[dt.date.today().toordinal() % len(K3_TIPS)]
+
+    col_greet, col_tip = st.columns(2)
+
+    with col_greet:
+        st.markdown(
+            f"""
+            <div class="greeting-card">
+                <span class="greeting-emoji">{emoji}</span>
+                <div class="greeting-text">{greeting}!</div>
+                <div class="greeting-date">{tanggal_lengkap} &middot; Pukul {now.strftime('%H:%M')} &middot; Pekan ke-{pekan_ke}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_tip:
+        st.markdown(
+            f"""
+            <div class="k3-card">
+                <h4>⚠️ Tips K3 Hari Ini</h4>
+                <ul><li>{tip}</li></ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
-def render_stats_banner() -> None:
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.markdown(kpi_card("🛠️", "Modul Aktif", "8 Modul", "Siap Pakai"), unsafe_allow_html=True)
-    with m2:
-        st.markdown(kpi_card("⚡", "Sistem AP2T", "Terhubung", "Online"), unsafe_allow_html=True)
-    with m3:
-        st.markdown(kpi_card("📄", "Format Dokumen", "DOCX / PDF", "Otomatis"), unsafe_allow_html=True)
-    with m4:
-        st.markdown(kpi_card("🔒", "Keamanan Validasi", "QR Code", "Encrypted"), unsafe_allow_html=True)
-
-
-def render_module_cards() -> None:
-    st.markdown('<div class="section-heading">🚀 Pilih Modul Operasional</div>', unsafe_allow_html=True)
+def render_module_search() -> None:
+    st.markdown('<div class="section-heading">🚀 Cari & Pilih Modul Operasional</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="section-subheading">Klik salah satu kartu di bawah untuk membuka modul.</div>',
+        f'<div class="section-subheading">Ketik kata kunci untuk mencari dari {len(MODULES)} modul yang tersedia, atau klik langsung kartu di bawah.</div>',
         unsafe_allow_html=True,
     )
+
+    keyword = st.text_input(
+        "Cari modul:",
+        placeholder="🔍 Contoh: surat, P2TL, token, QR...",
+        label_visibility="collapsed",
+    )
+
+    if keyword.strip():
+        kw = keyword.strip().lower()
+        filtered = [
+            m for m in MODULES
+            if kw in m["title"].lower() or kw in m["desc"].lower()
+        ]
+    else:
+        filtered = MODULES
+
+    if not filtered:
+        st.warning(f"Tidak ada modul yang cocok dengan kata kunci **'{keyword}'**.")
+        return
+
     col1, col2 = st.columns(2)
-
-    with col1:
-        st.page_link(
-            "pages/1_Generator_Surat.py",
-            label=(
-                "1. Generator Surat & Arsip (ZIP)\n\n"
-                "Buat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara massal dari data Excel."
-            ),
-            icon="✉️",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/2_Hitung_P2TL.py",
-            label=(
-                "2. Kalkulator Simulasi P2TL\n\n"
-                "Hitung perkiraan tagihan susulan P2TL berdasarkan golongan tarif, jam nyala, dan pemakaian."
-            ),
-            icon="🧮",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/5_Kalkulator_Tambah_Daya.py",
-            label=(
-                "5. Kalkulator Tambah Daya (PB/NJ)\n\n"
-                "Hitung estimasi Biaya Penyambungan (BP), UJL, dan total biaya tambah daya pelanggan."
-            ),
-            icon="⚡",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/7_Prediksi_Token_Prabayar.py",
-            label=(
-                "7. Prediksi Sisa Token Prabayar\n\n"
-                "Proyeksikan sisa token pelanggan prabayar dan rata-rata pemakaian harian dari riwayat pembelian."
-            ),
-            icon="🔋",
-            use_container_width=True,
-        )
-
-    with col2:
-        st.page_link(
-            "pages/3_Clean_Data_Excel.py",
-            label=(
-                "3. Validator & Cleaning Data Excel\n\n"
-                "Bersihkan data mentah AP2T: Format otomatis mata uang (Rp), IDPEL 12 digit, dan standarisasi."
-            ),
-            icon="🧹",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/4_Generator_QR.py",
-            label=(
-                "4. Generator QR Code Validasi\n\n"
-                "Buat QR Code validasi dokumen/surat tugas secara otomatis yang dapat di-embed atau diunduh."
-            ),
-            icon="📱",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/6_Deteksi_KWH_Macet.py",
-            label=(
-                "6. Deteksi kWh Macet\n\n"
-                "Deteksi stand meter yang tidak bergerak dari data DPP dan rekap status per pelanggan."
-            ),
-            icon="🔎",
-            use_container_width=True,
-        )
-        st.write("")
-        st.page_link(
-            "pages/8_Koreksi_Token_P2TL.py",
-            label=(
-                "8. Koreksi Token P2TL\n\n"
-                "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah."
-            ),
-            icon="⚖️",
-            use_container_width=True,
-        )
+    for i, m in enumerate(filtered):
+        target_col = col1 if i % 2 == 0 else col2
+        with target_col:
+            st.page_link(
+                m["file"],
+                label=f"{m['no']}. {m['title']}\n\n{m['desc']}",
+                icon=m["icon"],
+                use_container_width=True,
+            )
+            st.write("")
 
 
 def render_info_section() -> None:
@@ -578,7 +534,7 @@ def render_footer() -> None:
             """
             <div class="footer-heading">ℹ️ Info Sistem</div>
             <span style="color:#cbd5e1; font-size:0.9rem;">
-                Versi: <code>v2.4.0</code><br>
+                Versi: <code>v2.5.0</code><br>
                 Status: 🟢 Normal<br>
                 Environment: Production
             </span>
@@ -596,82 +552,6 @@ def render_footer() -> None:
     )
 
 
-def render_quick_info_panel() -> None:
-    st.markdown('<div class="section-heading">👋 Info Hari Ini</div>', unsafe_allow_html=True)
-
-    now = dt.datetime.now()
-    greeting, emoji = get_greeting(now.hour)
-    hari = HARI_ID[now.weekday()]
-    bulan = BULAN_ID[now.month - 1]
-    tanggal_lengkap = f"{hari}, {now.day} {bulan} {now.year}"
-    pekan_ke = now.isocalendar()[1]
-
-    tip = K3_TIPS[dt.date.today().toordinal() % len(K3_TIPS)]
-
-    col_greet, col_tip = st.columns(2)
-
-    with col_greet:
-        st.markdown(
-            f"""
-            <div class="greeting-card">
-                <span class="greeting-emoji">{emoji}</span>
-                <div class="greeting-text">{greeting}!</div>
-                <div class="greeting-date">{tanggal_lengkap} &middot; Pukul {now.strftime('%H:%M')} &middot; Pekan ke-{pekan_ke}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col_tip:
-        st.markdown(
-            f"""
-            <div class="k3-card">
-                <h4>⚠️ Tips K3 Hari Ini</h4>
-                <ul><li>{tip}</li></ul>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-SQRT3 = 1.732
-
-
-def render_quick_calculator() -> None:
-    st.markdown('<div class="section-heading">🧮 Kalkulator Cepat Konversi Listrik</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="section-subheading">Hitung estimasi Daya & Energi dari Tegangan dan Arus — praktis untuk cek cepat di lapangan.</div>',
-        unsafe_allow_html=True,
-    )
-
-    col_input, col_result = st.columns(2)
-
-    with col_input:
-        fase = st.radio("Jenis Fase:", ["1 Phase", "3 Phase"], horizontal=True)
-        default_v = 220.0 if fase == "1 Phase" else 380.0
-        tegangan = st.number_input("Tegangan (V)", min_value=0.0, value=default_v, step=1.0)
-        arus = st.number_input("Arus (A)", min_value=0.0, value=0.0, step=0.1)
-        pf = st.number_input("Faktor Daya (Cos φ)", min_value=0.0, max_value=1.0, value=0.85, step=0.01)
-        jam_nyala = st.number_input(
-            "Jam Nyala (opsional, untuk hitung Energi)", min_value=0.0, value=0.0, step=0.5,
-            help="Kosongkan kalau cuma mau lihat Daya sesaat (kW), tanpa menghitung total Energi (kWh).",
-        )
-
-    if fase == "3 Phase":
-        daya_kw = (tegangan * arus * SQRT3 * pf) / 1000
-    else:
-        daya_kw = (tegangan * arus * pf) / 1000
-    energi_kwh = daya_kw * jam_nyala
-
-    with col_result:
-        st.markdown(kpi_card("⚡", "Daya Terhitung", f"{daya_kw:,.3f} kW", fase), unsafe_allow_html=True)
-        st.write("")
-        if jam_nyala > 0:
-            st.markdown(kpi_card("🔋", "Energi Terhitung", f"{energi_kwh:,.2f} kWh", f"selama {jam_nyala:.1f} jam"), unsafe_allow_html=True)
-        else:
-            st.markdown(kpi_card("🔋", "Energi Terhitung", "—", "isi Jam Nyala dulu"), unsafe_allow_html=True)
-
-
 # =============================================================================
 # RENDER HALAMAN
 # =============================================================================
@@ -683,10 +563,7 @@ def main() -> None:
     render_quick_info_panel()
     st.divider()
 
-    render_stats_banner()
-    st.divider()
-
-    render_module_cards()
+    render_module_search()
     st.divider()
 
     render_info_section()
@@ -696,9 +573,6 @@ def main() -> None:
     st.divider()
 
     render_footer()
-    st.divider()
-
-    render_quick_calculator()
 
 
 if __name__ == "__main__":
