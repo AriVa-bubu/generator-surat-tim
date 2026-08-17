@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
+from pypdf import PdfMerger
 
 # =============================================================================
 # HELPERS
@@ -226,7 +227,7 @@ with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
         1. **Upload File Excel**: Pastikan kolom header berada di baris paling atas.
         2. **Upload Template Word**: Gunakan tag `{{ NAMA_KOLOM }}` di dalam file `.docx`.
         3. **Pilihan Folder**: Pilih kolom `TANGGAL` atau `ULP` untuk mengelompokkan hasil ke sub-folder digital di dalam ZIP.
-        4. **Output PDF & Cetak**: Cetak dokumen atau unduh hasil pengarsipan ZIP.
+        4. **Output PDF & Cetak**: Cetak semua dokumen sekaligus atau unduh hasil pengarsipan ZIP.
         """
     )
 
@@ -441,11 +442,29 @@ if excel_file and word_file:
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
                 has_pdf = False
+                merged_pdf_b64 = None
+                
                 if is_pdf and check_libreoffice_available():
                     try:
                         status_text = st.empty()
                         status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
                         convert_batch_to_pdf(documents, temp_dir)
+                        
+                        # Merge semua file PDF menjadi 1 file PDF besar untuk dicetak sekaligus
+                        status_text.text("⏳ Menggabungkan seluruh PDF untuk siap cetak...")
+                        merger = PdfMerger()
+                        for doc in documents:
+                            pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
+                            if os.path.exists(pdf_path):
+                                merger.append(pdf_path)
+                        
+                        merged_pdf_output = os.path.join(temp_dir, "SEMUA_SURAT_MERGED.pdf")
+                        merger.write(merged_pdf_output)
+                        merger.close()
+
+                        with open(merged_pdf_output, "rb") as f:
+                            merged_pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
+
                         status_text.empty()
                         has_pdf = True
                     except Exception as e:
@@ -453,24 +472,13 @@ if excel_file and word_file:
 
                 zip_bytes = build_zip_archive(documents, is_pdf and has_pdf)
 
-                first_pdf_b64 = None
-                first_pdf_bytes = None
-                first_pdf_name = "Sampel_Surat_1.pdf"
-                if has_pdf and len(documents) > 0:
-                    pdf_path = os.path.splitext(documents[0]["temp_docx_path"])[0] + ".pdf"
-                    if os.path.exists(pdf_path):
-                        with open(pdf_path, "rb") as f:
-                            first_pdf_bytes = f.read()
-                            first_pdf_b64 = base64.b64encode(first_pdf_bytes).decode("utf-8")
-                        first_pdf_name = f"Surat_{documents[0]['final_name']}.pdf"
-
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            if first_pdf_b64:
-                col_dl1, col_dl2, col_print = st.columns(3)
+            if merged_pdf_b64:
+                col_dl1, col_print = st.columns(2)
             else:
-                col_dl1, col_dl2 = st.columns(2)
+                col_dl1 = st.container()
                 col_print = None
 
             with col_dl1:
@@ -482,23 +490,12 @@ if excel_file and word_file:
                     use_container_width=True,
                 )
 
-            with col_dl2:
-                if first_pdf_bytes:
-                    st.download_button(
-                        label="📄 UNDUH SAMPEL PDF",
-                        data=first_pdf_bytes,
-                        file_name=first_pdf_name,
-                        mime="application/pdf",
-                        use_container_width=True,
-                    )
-                else:
-                    st.info("💡 Pilih **PDF Format** untuk mengaktifkan cetak.")
-
-            if col_print and first_pdf_b64:
+            # Tombol Cetak Semua Sekaligus
+            if col_print and merged_pdf_b64:
                 with col_print:
                     print_component = f"""
                     <div style="width: 100%;">
-                        <button onclick="cetakPDF()" style="
+                        <button onclick="cetakSemuaPDF()" style="
                             width: 100%;
                             background: linear-gradient(135deg, #059669 0%, #047857 100%);
                             color: white;
@@ -515,13 +512,13 @@ if excel_file and word_file:
                             gap: 8px;
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         ">
-                            🖨️ CETAK SEKARANG (CTRL + P)
+                            🖨️ CETAK SEMUA SURAT ({len(documents)} DOKUMEN)
                         </button>
                     </div>
 
                     <script>
-                    function cetakPDF() {{
-                        const base64Data = '{first_pdf_b64}';
+                    function cetakSemuaPDF() {{
+                        const base64Data = '{merged_pdf_b64}';
                         const byteCharacters = atob(base64Data);
                         const byteNumbers = new Array(byteCharacters.length);
                         for (let i = 0; i < byteCharacters.length; i++) {{
@@ -531,7 +528,6 @@ if excel_file and word_file:
                         const blob = new Blob([byteArray], {{type: 'application/pdf'}});
                         const fileURL = URL.createObjectURL(blob);
                         
-                        // Buka PDF di jendela baru lalu buka dialog cetak
                         const printWindow = window.open(fileURL, '_blank');
                         if (printWindow) {{
                             printWindow.focus();
