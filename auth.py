@@ -9,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login pengguna dengan UI Modern & Rapi."""
+    """Memeriksa status login pengguna dengan Full Background Gedung."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # Custom CSS
+    # CSS Custom: Background Full Gedung dengan Overlay Dark & Glassmorphism
     st.markdown(
         """
         <style>
@@ -35,16 +35,18 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* Background Utama */
+            /* Full Background Gambar Gedung + Dark Overlay */
             .stApp {
-                background: radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
-                            radial-gradient(circle at 80% 80%, rgba(3, 105, 161, 0.15) 0%, transparent 40%),
-                            #0b0f19 !important;
+                background: linear-gradient(135deg, rgba(11, 15, 25, 0.88) 0%, rgba(9, 13, 22, 0.92) 100%),
+                            url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-attachment: fixed !important;
             }
 
             .badge-status {
-                background: rgba(14, 165, 233, 0.2);
-                border: 1px solid rgba(56, 189, 248, 0.4);
+                background: rgba(14, 165, 233, 0.25);
+                border: 1px solid rgba(56, 189, 248, 0.5);
                 color: #38bdf8;
                 font-weight: 700;
                 font-size: 0.75rem;
@@ -52,35 +54,39 @@ def check_login():
                 border-radius: 30px;
                 display: inline-block;
                 margin-bottom: 12px;
+                backdrop-filter: blur(8px);
             }
 
-            /* Style Gambar Hero */
-            .pln-hero-img {
-                width: 100%;
-                height: 190px;
-                object-fit: cover;
-                border-radius: 16px;
-                margin: 15px 0;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            /* Container Kiri Glassmorphism */
+            .hero-container {
+                background: rgba(15, 23, 42, 0.55);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 24px;
+                padding: 36px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
 
-            /* Form Styling */
+            /* Form Login Sisi Kanan Glassmorphism */
             div[data-testid="stForm"] {
-                background: rgba(15, 23, 42, 0.8) !important;
-                backdrop-filter: blur(16px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                border-radius: 20px !important;
-                padding: 28px !important;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+                background: rgba(15, 23, 42, 0.75) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 24px !important;
+                padding: 32px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
             }
 
             .stButton > button {
                 background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
                 border: none !important;
-                border-radius: 10px !important;
+                border-radius: 12px !important;
                 font-weight: 700 !important;
-                padding: 0.7rem 1.5rem !important;
+                padding: 0.75rem 1.5rem !important;
+                font-size: 1rem !important;
+                box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.5) !important;
             }
         </style>
         """,
@@ -91,48 +97,69 @@ def check_login():
     if not os.path.exists(logo_path):
         logo_path = "assets/logo_pln.png"
 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
-    col_hero, col_login = st.columns([1.1, 1], gap="large")
+    col_hero, col_login = st.columns([1.2, 1], gap="large")
 
     with col_hero:
-        st.markdown('<span class="badge-status">⚡ PORTAL OPERASIONAL INTEGRATED</span>', unsafe_allow_html=True)
-        st.markdown("<h2 style='color: white; font-weight: 800; margin-top: 5px;'>Sistem Manajemen & Pelayanan Listrik PLN</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 0.9rem;'>Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional.</p>", unsafe_allow_html=True)
-        
-        # Gambar Gedung
-        st.markdown('<img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" class="pln-hero-img" alt="Gedung PLN">', unsafe_allow_html=True)
-        
-        # Feature List
-        st.markdown("""
-            <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.8;">
-                ⚡ Otomatisasi Generator Surat & Dokumen Multi-Halaman<br>
-                ⚡ Kalkulator Akurat P2TL & Rekomendasi Konversi<br>
-                ⚡ Sistem Keamanan Akses Terenkripsi & Terintegrasi
+        st.markdown(
+            """
+            <div class="hero-container">
+                <span class="badge-status">⚡ PORTAL OPERASIONAL INTEGRATED</span>
+                <h1 style="color: white; font-weight: 800; font-size: 2.2rem; margin-top: 10px; margin-bottom: 12px; line-height: 1.2;">
+                    Sistem Manajemen & Pelayanan Listrik PLN
+                </h1>
+                <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.6; margin-bottom: 24px;">
+                    Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional secara <i>real-time</i>.
+                </p>
+                <div style="color: #e2e8f0; font-size: 0.95rem; line-height: 2;">
+                    ⚡ <b>Otomatisasi Document Generator</b> (Multi-halaman PDF)<br>
+                    ⚡ <b>Kalkulator Akurat P2TL</b> & Rekomendasi Tarif<br>
+                    ⚡ <b>Sistem Terenkripsi</b> & Akses Kontrol Terintegrasi
+                </div>
             </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
     with col_login:
         if os.path.exists(logo_path):
-            st.image(logo_path, width=95)
+            st.image(logo_path, width=100)
         else:
-            st.image("https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png", width=90)
+            st.image(
+                "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png",
+                width=95,
+            )
 
-        st.markdown("<h3 style='color: white; margin-bottom: 2px;'>🔒 Selamat Datang</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 0.85rem; margin-bottom: 15px;'>Silakan masuk menggunakan akun resmi terdaftar.</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<h2 style='color: white; margin-bottom: 2px; font-weight:"
+            " 800;'>🔒 Selamat Datang</h2>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<p style='color: #94a3b8; font-size: 0.9rem; margin-bottom:"
+            " 20px;'>Silakan masuk menggunakan akun resmi terdaftar.</p>",
+            unsafe_allow_html=True,
+        )
 
         with st.form("login_form"):
             username = st.text_input("Username", placeholder="Masukkan username")
-            password = st.text_input("Password", type="password", placeholder="Masukkan password")
+            password = st.text_input(
+                "Password", type="password", placeholder="Masukkan password"
+            )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            submit = st.form_submit_button("🔑 Masuk ke Portal", type="primary", use_container_width=True)
+            submit = st.form_submit_button(
+                "🔑 Masuk ke Portal", type="primary", use_container_width=True
+            )
 
             if submit:
                 hashed_input = make_hash(password)
                 saved_pass = credentials.get(username)
 
-                if saved_pass and (saved_pass == password or saved_pass == hashed_input):
+                if saved_pass and (
+                    saved_pass == password or saved_pass == hashed_input
+                ):
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     st.success("Login berhasil! Mengalihkan...")
@@ -148,7 +175,10 @@ def render_logout_button():
     if st.session_state.get("logged_in", False):
         with st.sidebar:
             st.markdown("---")
-            st.write(f"👤 Login sebagai: **{st.session_state.get('username', 'User').upper()}**")
+            st.write(
+                "👤 Login sebagai: **"
+                f"{st.session_state.get('username', 'User').upper()}**"
+            )
             if st.button("🚪 Keluar / Logout", use_container_width=True):
                 st.session_state.logged_in = False
                 st.rerun()
