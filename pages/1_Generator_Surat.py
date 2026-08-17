@@ -11,8 +11,17 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
-from pypdf import PdfMerger
 
+# Try import pypdf / PyPDF2 safely
+try:
+    from pypdf import PdfMerger  # type: ignore
+    HAS_PYPDF = True
+except ImportError:
+    try:
+        from PyPDF2 import PdfMerger  # type: ignore
+        HAS_PYPDF = True
+    except ImportError:
+        HAS_PYPDF = False
 # =============================================================================
 # HELPERS
 # =============================================================================
@@ -27,12 +36,10 @@ def get_base64_of_bin_file(bin_file: str) -> str:
 
 
 def sanitize_filename(value: str) -> str:
-    """Bersihkan string dari karakter yang tidak boleh ada di nama file/folder."""
     return ILLEGAL_FILENAME_CHARS.sub("", str(value).strip())
 
 
 def cell_to_text(value) -> str:
-    """Konversi nilai sel Excel ke teks yang aman dipakai di surat/nama file."""
     if pd.isna(value):
         return ""
     if isinstance(value, pd.Timestamp):
@@ -41,7 +48,6 @@ def cell_to_text(value) -> str:
 
 
 def build_unique_name(base_name: str, folder_path: str, used_names: dict) -> str:
-    """Pastikan nama file unik di dalam folder yang sama (hindari saling menimpa)."""
     key = f"{folder_path}{base_name}".lower()
     count = used_names.get(key, 0)
     used_names[key] = count + 1
@@ -221,16 +227,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
-    st.markdown(
-        """
-        1. **Upload File Excel**: Pastikan kolom header berada di baris paling atas.
-        2. **Upload Template Word**: Gunakan tag `{{ NAMA_KOLOM }}` di dalam file `.docx`.
-        3. **Pilihan Folder**: Pilih kolom `TANGGAL` atau `ULP` untuk mengelompokkan hasil ke sub-folder digital di dalam ZIP.
-        4. **Output PDF & Cetak**: Cetak semua dokumen sekaligus atau unduh hasil pengarsipan ZIP.
-        """
-    )
-
 # =============================================================================
 # STEP 1 — UPLOAD
 # =============================================================================
@@ -262,35 +258,11 @@ with col2:
 def render_summary_cards(df: pd.DataFrame) -> None:
     s1, s2, s3 = st.columns(3)
     with s1:
-        st.markdown(
-            f"""
-            <div class="stat-card">
-                <div class="stat-label">Total Surat Dicetak</div>
-                <div class="stat-value">{len(df)} Dokumen</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="stat-card"><div class="stat-label">Total Surat Dicetak</div><div class="stat-value">{len(df)} Dokumen</div></div>', unsafe_allow_html=True)
     with s2:
-        st.markdown(
-            f"""
-            <div class="stat-card">
-                <div class="stat-label">Variabel Kolom Excel</div>
-                <div class="stat-value">{len(df.columns)} Kolom</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="stat-card"><div class="stat-label">Variabel Kolom Excel</div><div class="stat-value">{len(df.columns)} Kolom</div></div>', unsafe_allow_html=True)
     with s3:
-        st.markdown(
-            """
-            <div class="stat-card">
-                <div class="stat-label">Status File Template</div>
-                <div class="stat-value" style="color:#4ade80;">Ready ✓</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="stat-card"><div class="stat-label">Status File Template</div><div class="stat-value" style="color:#4ade80;">Ready ✓</div></div>', unsafe_allow_html=True)
 
 
 def render_options(df: pd.DataFrame):
@@ -309,27 +281,14 @@ def render_options(df: pd.DataFrame):
     c_opt1, c_opt2, c_opt3 = st.columns(3)
 
     with c_opt1:
-        naming_column = st.selectbox(
-            "Penamaan File Berdasarkan:",
-            options=df.columns.tolist(),
-            index=0,
-        )
+        naming_column = st.selectbox("Penamaan File Berdasarkan:", options=df.columns.tolist(), index=0)
 
     with c_opt2:
         options_folder = [NO_FOLDER_OPTION] + df.columns.tolist()
-        folder_column = st.selectbox(
-            "Pengelompokan Sub-Folder (ZIP):",
-            options=options_folder,
-            index=0,
-            help="Pilih kolom TANGGAL atau ULP untuk membagi file ke sub-folder otomatis.",
-        )
+        folder_column = st.selectbox("Pengelompokan Sub-Folder (ZIP):", options=options_folder, index=0)
 
     with c_opt3:
-        output_format = st.radio(
-            "Format File Keluaran:",
-            options=["DOCX (Word)", "PDF Format"],
-            horizontal=True,
-        )
+        output_format = st.radio("Format File Keluaran:", options=["DOCX (Word)", "PDF Format"], horizontal=True)
 
     return naming_column, folder_column, output_format
 
@@ -345,7 +304,6 @@ def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: st
         status_text.text(f"⏳ Merender surat {idx + 1} dari {total_rows}...")
 
         context = {str(col): cell_to_text(row[col]) for col in df.columns}
-
         doc_tpl = DocxTemplate(io.BytesIO(template_bytes))
         doc_tpl.render(context)
 
@@ -364,13 +322,11 @@ def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: st
         temp_docx_path = os.path.join(temp_dir, f"doc_{idx:04d}.docx")
         doc_tpl.save(temp_docx_path)
 
-        documents.append(
-            {
-                "temp_docx_path": temp_docx_path,
-                "folder_path": folder_path,
-                "final_name": final_name,
-            }
-        )
+        documents.append({
+            "temp_docx_path": temp_docx_path,
+            "folder_path": folder_path,
+            "final_name": final_name,
+        })
         progress_bar.progress((idx + 1) / total_rows * 0.6)
 
     status_text.empty()
@@ -387,9 +343,7 @@ def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if result.returncode != 0:
-        raise RuntimeError(
-            "Konversi PDF gagal. Detail: " + result.stderr.decode(errors="ignore")[:500]
-        )
+        raise RuntimeError("Konversi PDF gagal. Detail: " + result.stderr.decode(errors="ignore")[:500])
 
 
 def build_zip_archive(documents: list, is_pdf: bool) -> bytes:
@@ -442,28 +396,34 @@ if excel_file and word_file:
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
                 has_pdf = False
-                merged_pdf_b64 = None
-                
+                pdf_base64_list = []
+
                 if is_pdf and check_libreoffice_available():
                     try:
                         status_text = st.empty()
                         status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
                         convert_batch_to_pdf(documents, temp_dir)
                         
-                        # Merge semua file PDF menjadi 1 file PDF besar untuk dicetak sekaligus
-                        status_text.text("⏳ Menggabungkan seluruh PDF untuk siap cetak...")
-                        merger = PdfMerger()
-                        for doc in documents:
-                            pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
-                            if os.path.exists(pdf_path):
-                                merger.append(pdf_path)
-                        
-                        merged_pdf_output = os.path.join(temp_dir, "SEMUA_SURAT_MERGED.pdf")
-                        merger.write(merged_pdf_output)
-                        merger.close()
-
-                        with open(merged_pdf_output, "rb") as f:
-                            merged_pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
+                        if HAS_PYPDF:
+                            status_text.text("⏳ Menggabungkan PDF...")
+                            merger = PdfMerger()
+                            for doc in documents:
+                                pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
+                                if os.path.exists(pdf_path):
+                                    merger.append(pdf_path)
+                            merged_output = os.path.join(temp_dir, "MERGED.pdf")
+                            merger.write(merged_output)
+                            merger.close()
+                            
+                            with open(merged_output, "rb") as f:
+                                pdf_base64_list.append(base64.b64encode(f.read()).decode("utf-8"))
+                        else:
+                            # Read all PDFs into Base64 array
+                            for doc in documents:
+                                pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
+                                if os.path.exists(pdf_path):
+                                    with open(pdf_path, "rb") as f:
+                                        pdf_base64_list.append(base64.b64encode(f.read()).decode("utf-8"))
 
                         status_text.empty()
                         has_pdf = True
@@ -475,7 +435,7 @@ if excel_file and word_file:
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            if merged_pdf_b64:
+            if pdf_base64_list:
                 col_dl1, col_print = st.columns(2)
             else:
                 col_dl1 = st.container()
@@ -490,12 +450,13 @@ if excel_file and word_file:
                     use_container_width=True,
                 )
 
-            # Tombol Cetak Semua Sekaligus
-            if col_print and merged_pdf_b64:
+            if col_print and pdf_base64_list:
+                import json
+                pdf_json = json.dumps(pdf_base64_list)
                 with col_print:
                     print_component = f"""
                     <div style="width: 100%;">
-                        <button onclick="cetakSemuaPDF()" style="
+                        <button onclick="cetakSemua()" style="
                             width: 100%;
                             background: linear-gradient(135deg, #059669 0%, #047857 100%);
                             color: white;
@@ -517,23 +478,21 @@ if excel_file and word_file:
                     </div>
 
                     <script>
-                    function cetakSemuaPDF() {{
-                        const base64Data = '{merged_pdf_b64}';
-                        const byteCharacters = atob(base64Data);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {{
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }}
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], {{type: 'application/pdf'}});
-                        const fileURL = URL.createObjectURL(blob);
-                        
-                        const printWindow = window.open(fileURL, '_blank');
-                        if (printWindow) {{
-                            printWindow.focus();
-                        }} else {{
-                            alert('Mohon izinkan pop-up di browser kamu untuk membuka jendela cetak!');
-                        }}
+                    function cetakSemua() {{
+                        const pdfs = {pdf_json};
+                        pdfs.forEach((b64, idx) => {{
+                            setTimeout(() => {{
+                                const binStr = atob(b64);
+                                const arr = new Uint8Array(binStr.length);
+                                for (let i = 0; i < binStr.length; i++) {{
+                                    arr[i] = binStr.charCodeAt(i);
+                                }}
+                                const blob = new Blob([arr], {{ type: 'application/pdf' }});
+                                const url = URL.createObjectURL(blob);
+                                const win = window.open(url, '_blank');
+                                if (win) win.focus();
+                            }}, idx * 400);
+                        }});
                     }}
                     </script>
                     """
