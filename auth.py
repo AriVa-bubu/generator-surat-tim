@@ -9,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background Gedung Adaptif (Dark/Light)."""
+    """Memeriksa status login dengan Full Background Gedung & Minimalist Login Card."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # CSS Custom: Background Full Gedung dengan Adaptasi Tema (Light / Dark)
+    # CSS Custom: Modern Glassmorphism Centered Login
     st.markdown(
         """
         <style>
@@ -35,84 +35,57 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* --- BASE BACKGROUND FULL GEDUNG --- */
+            /* Full Background Gambar Gedung */
             .stApp {
                 background-size: cover !important;
                 background-position: center !important;
                 background-attachment: fixed !important;
-            }
-
-            /* 1. STYLING DEFAULT / DARK MODE */
-            .stApp {
-                background-image: linear-gradient(135deg, rgba(11, 15, 25, 0.88) 0%, rgba(9, 13, 22, 0.92) 100%),
+                background-image: linear-gradient(135deg, rgba(11, 15, 25, 0.82) 0%, rgba(9, 13, 22, 0.88) 100%),
                                   url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
             }
 
-            .hero-container-adaptive {
-                background: rgba(15, 23, 42, 0.65);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                border-radius: 24px;
-                padding: 36px;
-                color: #ffffff;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            @media (prefers-color-scheme: light) {
+                .stApp {
+                    background-image: linear-gradient(135deg, rgba(248, 250, 252, 0.82) 0%, rgba(226, 232, 240, 0.88) 100%),
+                                      url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
+                }
             }
 
+            /* Styling Kartu Form Login Glassmorphism Centered */
             div[data-testid="stForm"] {
-                background: rgba(15, 23, 42, 0.8) !important;
+                background: rgba(15, 23, 42, 0.75) !important;
                 backdrop-filter: blur(20px) !important;
                 -webkit-backdrop-filter: blur(20px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-radius: 24px !important;
-                padding: 32px !important;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+                padding: 40px 36px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
             }
 
-            .badge-status {
-                background: rgba(14, 165, 233, 0.25);
-                border: 1px solid rgba(56, 189, 248, 0.5);
-                color: #38bdf8;
-                font-weight: 700;
-                font-size: 0.75rem;
-                padding: 6px 14px;
-                border-radius: 30px;
-                display: inline-block;
-                margin-bottom: 12px;
-            }
-
-            /* 2. OVERRIDE OTOMATIS SAAT TEMA LIGHT / TERANG AK TIF */
             @media (prefers-color-scheme: light) {
-                .stApp {
-                    background-image: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(226, 232, 240, 0.92) 100%),
-                                      url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
-                }
-
-                .hero-container-adaptive {
-                    background: rgba(255, 255, 255, 0.75);
-                    border: 1px solid rgba(0, 0, 0, 0.1);
-                    color: #0f172a;
-                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-                }
-
-                .hero-container-adaptive p, .hero-container-adaptive div {
-                    color: #334155 !important;
-                }
-
                 div[data-testid="stForm"] {
                     background: rgba(255, 255, 255, 0.85) !important;
                     border: 1px solid rgba(0, 0, 0, 0.1) !important;
                     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
                 }
-
-                .badge-status {
-                    background: rgba(2, 132, 199, 0.15);
-                    border: 1px solid rgba(2, 132, 199, 0.4);
-                    color: #0284c7;
-                }
             }
 
-            /* Styling Button Universal */
+            /* Logo Styling */
+            .pln-logo-wrapper {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .pln-logo-img {
+                width: 80px;
+                height: auto;
+                object-fit: contain;
+                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+            }
+
+            /* Tombol Login */
             .stButton > button {
                 background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
                 border: none !important;
@@ -132,48 +105,35 @@ def check_login():
     if not os.path.exists(logo_path):
         logo_path = "assets/logo_pln.png"
 
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
-    col_hero, col_login = st.columns([1.2, 1], gap="large")
+    # Layout Terpusat (Centered 1 Kolom)
+    _, col_center, _ = st.columns([1, 1.2, 1])
 
-    with col_hero:
+    with col_center:
+        # Menampilkan Logo PLN Transparan & Rapi
+        logo_url = (
+            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
+        )
+
         st.markdown(
-            """
-            <div class="hero-container-adaptive">
-                <span class="badge-status">⚡ PORTAL OPERASIONAL INTEGRATED</span>
-                <h1 style="font-weight: 800; font-size: 2.2rem; margin-top: 10px; margin-bottom: 12px; line-height: 1.2;">
-                    Sistem Manajemen & Pelayanan Listrik PLN
-                </h1>
-                <p style="font-size: 1rem; line-height: 1.6; margin-bottom: 24px;">
-                    Platform digital terpadu untuk efisiensi pembuatan surat, kalkulasi P2TL, deteksi KWH macet, dan analisis data operasional secara <i>real-time</i>.
-                </p>
-                <div style="font-size: 0.95rem; line-height: 2;">
-                    ⚡ <b>Otomatisasi Document Generator</b> (Multi-halaman PDF)<br>
-                    ⚡ <b>Kalkulator Akurat P2TL</b> & Rekomendasi Tarif<br>
-                    ⚡ <b>Sistem Terenkripsi</b> & Akses Kontrol Terintegrasi
-                </div>
+            f"""
+            <div class="pln-logo-wrapper">
+                <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    with col_login:
-        if os.path.exists(logo_path):
-            st.image(logo_path, width=100)
-        else:
-            st.image(
-                "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png",
-                width=95,
-            )
-
         st.markdown(
-            "<h2 style='margin-bottom: 2px; font-weight: 800;'>🔒 Selamat"
-            " Datang</h2>",
+            "<h2 style='text-align: center; margin-bottom: 4px; font-weight:"
+            " 800;'>🔒 Selamat Datang</h2>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='opacity: 0.8; font-size: 0.9rem; margin-bottom:"
-            " 20px;'>Silakan masuk menggunakan akun resmi terdaftar.</p>",
+            "<p style='text-align: center; opacity: 0.8; font-size: 0.9rem;"
+            " margin-bottom: 24px;'>Sistem Manajemen & Pelayanan Listrik"
+            " PLN</p>",
             unsafe_allow_html=True,
         )
 
