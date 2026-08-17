@@ -12,17 +12,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
 
-# Safe import pypdf / PyPDF2
-try:
-    from pypdf import PdfMerger  # type: ignore
-    HAS_PYPDF = True
-except ImportError:
-    try:
-        from PyPDF2 import PdfMerger  # type: ignore
-        HAS_PYPDF = True
-    except ImportError:
-        HAS_PYPDF = False
-
 # =============================================================================
 # HELPERS
 # =============================================================================
@@ -56,7 +45,26 @@ def build_unique_name(base_name: str, folder_path: str, used_names: dict) -> str
 
 
 def check_libreoffice_available() -> bool:
-    return shutil.which("libreoffice") is not None
+    return (shutil.which("libreoffice") is not None) or (shutil.which("soffice") is not None)
+
+
+def merge_pdfs_dynamically(pdf_paths: list, output_stream):
+    """Import pypdf/PyPDF2 secara dinamis saat dibutuhkan."""
+    try:
+        from pypdf import PdfMerger
+    except ImportError:
+        try:
+            from PyPDF2 import PdfMerger
+        except ImportError:
+            raise RuntimeError("Library `pypdf` atau `PyPDF2` tidak ditemukan. Pastikan `pypdf` ada di requirements.txt dan lakukan Reboot App.")
+
+    merger = PdfMerger()
+    for pdf_path in pdf_paths:
+        if os.path.exists(pdf_path):
+            merger.append(pdf_path)
+    
+    merger.write(output_stream)
+    merger.close()
 
 
 # =============================================================================
@@ -325,7 +333,7 @@ def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: st
             "folder_path": folder_path,
             "final_name": final_name,
         })
-        progress_bar.progress((idx + 1) / total_rows * 0.5)
+        progress_bar.progress((idx + 1) / total_rows * 0.4)
 
     status_text.empty()
     progress_bar.empty()
@@ -337,7 +345,11 @@ def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
     if not docx_paths:
         return
 
-    cmd = ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", temp_dir] + docx_paths
+    libre_cmd = shutil.which("libreoffice") or shutil.which("soffice")
+    if not libre_cmd:
+        raise RuntimeError("LibreOffice tidak ditemukan di server. Pastikan 'packages.txt' memuat 'libreoffice'.")
+
+    cmd = [libre_cmd, "--headless", "--convert-to", "pdf", "--outdir", temp_dir] + docx_paths
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if result.returncode != 0:
@@ -374,95 +386,86 @@ if excel_file and word_file:
                 # 1. Render seluruh dokumen DOCX
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
-                if not check_libreoffice_available():
-                    st.error("❌ System error: LibreOffice tidak ditemukan di server untuk konversi PDF.")
-                elif not HAS_PYPDF:
-                    st.error("❌ System error: Library `pypdf` belum terinstall. Silakan tambahkan `pypdf` ke `requirements.txt`.")
-                else:
-                    status_text = st.empty()
-                    
-                    # 2. Konversi DOCX ke PDF
-                    status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
-                    convert_batch_to_pdf(documents, temp_dir)
+                status_text = st.empty()
+                
+                # 2. Konversi DOCX ke PDF
+                status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
+                convert_batch_to_pdf(documents, temp_dir)
 
-                    # 3. Gabungkan seluruh file PDF menjadi 1 file multi-halaman
-                    status_text.text("⏳ Menggabungkan seluruh surat menjadi 1 file PDF multi-halaman...")
-                    merger = PdfMerger()
-                    for doc in documents:
-                        pdf_path = os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
-                        if os.path.exists(pdf_path):
-                            merger.append(pdf_path)
+                # 3. Gabungkan seluruh file PDF menjadi 1 file multi-halaman
+                status_text.text("⏳ Menggabungkan seluruh surat menjadi 1 file PDF multi-halaman...")
+                
+                pdf_paths = [os.path.splitext(doc["temp_docx_path"])[0] + ".pdf" for doc in documents]
+                merged_bytes_io = io.BytesIO()
+                
+                merge_pdfs_dynamically(pdf_paths, merged_bytes_io)
 
-                    merged_bytes_io = io.BytesIO()
-                    merger.write(merged_bytes_io)
-                    merger.close()
+                merged_pdf_bytes = merged_bytes_io.getvalue()
+                merged_pdf_b64 = base64.b64encode(merged_pdf_bytes).decode("utf-8")
+                status_text.empty()
 
-                    merged_pdf_bytes = merged_bytes_io.getvalue()
-                    merged_pdf_b64 = base64.b64encode(merged_pdf_bytes).decode("utf-8")
-                    status_text.empty()
+                st.toast("🎉 Semua surat berhasil digabungkan!", icon="⚡")
+                st.success(f"🎉 Selesai! Berhasil menggabungkan **{len(documents)} surat** menjadi 1 file PDF multi-halaman.")
 
-                    st.toast("🎉 Semua surat berhasil digabungkan!", icon="⚡")
-                    st.success(f"🎉 Selesai! Berhasil menggabungkan **{len(documents)} surat** menjadi 1 file PDF multi-halaman.")
+                col_dl, col_print = st.columns(2)
 
-                    col_dl, col_print = st.columns(2)
+                # Tombol Unduh PDF Multi-halaman
+                with col_dl:
+                    st.download_button(
+                        label=f"⬇️ UNDUH PDF GABUNGAN ({len(documents)} HALAMAN)",
+                        data=merged_pdf_bytes,
+                        file_name="Gabungan_Surat_PLN.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
 
-                    # Tombol Unduh PDF Multi-halaman
-                    with col_dl:
-                        st.download_button(
-                            label=f"⬇️ UNDUH PDF GABUNGAN ({len(documents)} HALAMAN)",
-                            data=merged_pdf_bytes,
-                            file_name="Gabungan_Surat_PLN.pdf",
-                            mime="application/pdf",
-                            use_container_width=True,
-                        )
+                # Tombol Cetak PDF Multi-halaman
+                with col_print:
+                    print_component = f"""
+                    <div style="width: 100%;">
+                        <button onclick="cetakPDF()" style="
+                            width: 100%;
+                            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                            color: white;
+                            font-weight: 700;
+                            border: none;
+                            border-radius: 10px;
+                            padding: 0.75rem 1rem;
+                            cursor: pointer;
+                            font-family: 'Plus Jakarta Sans', sans-serif;
+                            font-size: 14px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 8px;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        ">
+                            🖨️ CETAK LANGSUNG ({len(documents)} DOKUMEN)
+                        </button>
+                    </div>
 
-                    # Tombol Cetak PDF Multi-halaman
-                    with col_print:
-                        print_component = f"""
-                        <div style="width: 100%;">
-                            <button onclick="cetakPDF()" style="
-                                width: 100%;
-                                background: linear-gradient(135deg, #059669 0%, #047857 100%);
-                                color: white;
-                                font-weight: 700;
-                                border: none;
-                                border-radius: 10px;
-                                padding: 0.75rem 1rem;
-                                cursor: pointer;
-                                font-family: 'Plus Jakarta Sans', sans-serif;
-                                font-size: 14px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 8px;
-                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                            ">
-                                🖨️ CETAK LANGSUNG ({len(documents)} DOKUMEN)
-                            </button>
-                        </div>
-
-                        <script>
-                        function cetakPDF() {{
-                            const base64Data = '{merged_pdf_b64}';
-                            const byteCharacters = atob(base64Data);
-                            const byteNumbers = new Array(byteCharacters.length);
-                            for (let i = 0; i < byteCharacters.length; i++) {{
-                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }}
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], {{type: 'application/pdf'}});
-                            const fileURL = URL.createObjectURL(blob);
-
-                            const win = window.open(fileURL, '_blank');
-                            if (win) {{
-                                win.focus();
-                            }} else {{
-                                alert('Mohon izinkan pop-up di browser!');
-                            }}
+                    <script>
+                    function cetakPDF() {{
+                        const base64Data = '{merged_pdf_b64}';
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {{
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                         }}
-                        </script>
-                        """
-                        components.html(print_component, height=55)
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], {{type: 'application/pdf'}});
+                        const fileURL = URL.createObjectURL(blob);
+
+                        const win = window.open(fileURL, '_blank');
+                        if (win) {{
+                            win.focus();
+                        }} else {{
+                            alert('Mohon izinkan pop-up di browser!');
+                        }}
+                    }}
+                    </script>
+                    """
+                    components.html(print_component, height=55)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
