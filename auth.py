@@ -1,6 +1,19 @@
+import base64
 import hashlib
 import os
 import streamlit as st
+
+
+def get_image_base64(path_to_file: str) -> str:
+    """Mengubah file gambar lokal menjadi string Base64 untuk tag HTML img."""
+    if os.path.exists(path_to_file):
+        with open(path_to_file, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+            ext = os.path.splitext(path_to_file)[1].replace(".", "")
+            if ext == "svg":
+                ext = "svg+xml"
+            return f"data:image/{ext};base64,{encoded_string}"
+    return ""
 
 
 def make_hash(password: str) -> str:
@@ -9,7 +22,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background & Dual Logo (PLN & Danantara)."""
+    """Memeriksa status login dengan Full Background & Dual Logo Lokal (PLN & Danantara)."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -24,6 +37,24 @@ def check_login():
             "⚠️ Belum ada kredensial yang dikonfigurasi di Streamlit Secrets."
         )
         st.stop()
+
+    # Cek & Load Logo Lokal (PLN & Danantara)
+    pln_path = (
+        "logo_pln.png"
+        if os.path.exists("logo_pln.png")
+        else "assets/logo_pln.png"
+    )
+    danantara_path = (
+        "logo_danantara.png"
+        if os.path.exists("logo_danantara.png")
+        else "assets/logo_danantara.png"
+    )
+
+    pln_src = (
+        get_image_base64(pln_path)
+        or "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
+    )
+    danantara_src = get_image_base64(danantara_path)
 
     # Styling CSS
     st.markdown(
@@ -75,19 +106,19 @@ def check_login():
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 24px;
+                gap: 20px;
                 margin-bottom: 20px;
             }
 
             .logo-pln {
-                height: 55px;
+                height: 52px;
                 width: auto;
                 object-fit: contain;
                 filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
             }
 
             .logo-danantara {
-                height: 48px;
+                height: 44px;
                 width: auto;
                 object-fit: contain;
                 filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
@@ -95,7 +126,7 @@ def check_login():
 
             .logo-divider {
                 width: 1px;
-                height: 38px;
+                height: 36px;
                 background-color: rgba(255, 255, 255, 0.3);
             }
 
@@ -128,20 +159,12 @@ def check_login():
 
     with col_center:
         # Menampilkan Logo PLN dan Danantara berdampingan
-        pln_logo_url = (
-            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
-        )
-        danantara_logo_url = (
-            "assets/logo_danantara.png"
-            if os.path.exists("assets/logo_danantara.png")
-            else "https://upload.wikimedia.org/wikipedia/id/thumb/0/01/Logo_Danantara.png/500px-Logo_Danantara.png"
-        )
         st.markdown(
             f"""
             <div class="logo-header-wrapper">
-                <img src="{pln_logo_url}" class="logo-pln" alt="Logo PLN">
+                <img src="{pln_src}" class="logo-pln" alt="Logo PLN">
                 <div class="logo-divider"></div>
-                <img src="{danantara_logo_url}" class="logo-danantara" alt="Logo Danantara">
+                <img src="{danantara_src}" class="logo-danantara" alt="Logo Danantara">
             </div>
             """,
             unsafe_allow_html=True,
