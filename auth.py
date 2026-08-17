@@ -9,7 +9,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background Gedung & Minimalist Login Card."""
+    """Memeriksa status login dengan Full Background & Dual Logo (PLN & Danantara)."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +25,7 @@ def check_login():
         )
         st.stop()
 
-    # CSS Custom: Modern Glassmorphism Centered Login
+    # Styling CSS
     st.markdown(
         """
         <style>
@@ -51,14 +51,14 @@ def check_login():
                 }
             }
 
-            /* Styling Kartu Form Login Glassmorphism Centered */
+            /* Styling Form Login Glassmorphism Centered */
             div[data-testid="stForm"] {
                 background: rgba(15, 23, 42, 0.75) !important;
                 backdrop-filter: blur(20px) !important;
                 -webkit-backdrop-filter: blur(20px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 border-radius: 24px !important;
-                padding: 40px 36px !important;
+                padding: 36px 32px !important;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
             }
 
@@ -70,19 +70,39 @@ def check_login():
                 }
             }
 
-            /* Logo Styling */
-            .pln-logo-wrapper {
+            /* Container Dual Logo */
+            .logo-header-wrapper {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                gap: 24px;
                 margin-bottom: 20px;
             }
 
-            .pln-logo-img {
-                width: 80px;
-                height: auto;
+            .logo-pln {
+                height: 55px;
+                width: auto;
                 object-fit: contain;
-                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+                filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
+            }
+
+            .logo-danantara {
+                height: 48px;
+                width: auto;
+                object-fit: contain;
+                filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
+            }
+
+            .logo-divider {
+                width: 1px;
+                height: 38px;
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+
+            @media (prefers-color-scheme: light) {
+                .logo-divider {
+                    background-color: rgba(0, 0, 0, 0.2);
+                }
             }
 
             /* Tombol Login */
@@ -101,25 +121,24 @@ def check_login():
         unsafe_allow_html=True,
     )
 
-    logo_path = "logo_pln.png"
-    if not os.path.exists(logo_path):
-        logo_path = "assets/logo_pln.png"
-
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
 
     # Layout Terpusat (Centered 1 Kolom)
     _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        # Menampilkan Logo PLN Transparan & Rapi
-        logo_url = (
+        # Menampilkan Logo PLN dan Danantara berdampingan
+        pln_logo_url = (
             "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
         )
+        danantara_logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Danantara_Indonesia.svg/512px-Danantara_Indonesia.svg.png"
 
         st.markdown(
             f"""
-            <div class="pln-logo-wrapper">
-                <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
+            <div class="logo-header-wrapper">
+                <img src="{pln_logo_url}" class="logo-pln" alt="Logo PLN">
+                <div class="logo-divider"></div>
+                <img src="{danantara_logo_url}" class="logo-danantara" alt="Logo Danantara">
             </div>
             """,
             unsafe_allow_html=True,
@@ -131,7 +150,7 @@ def check_login():
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='text-align: center; opacity: 0.8; font-size: 0.9rem;"
+            "<p style='text-align: center; opacity: 0.8; font-size: 0.88rem;"
             " margin-bottom: 24px;'>Sistem Manajemen & Pelayanan Listrik"
             " PLN</p>",
             unsafe_allow_html=True,
