@@ -131,8 +131,11 @@ def check_login():
         pln_logo_url = (
             "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
         )
-        danantara_logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Danantara_Indonesia.svg/512px-Danantara_Indonesia.svg.png"
-
+        danantara_logo_url = (
+            "assets/logo_danantara.png"
+            if os.path.exists("assets/logo_danantara.png")
+            else "https://upload.wikimedia.org/wikipedia/id/thumb/0/01/Logo_Danantara.png/500px-Logo_Danantara.png"
+        )
         st.markdown(
             f"""
             <div class="logo-header-wrapper">
