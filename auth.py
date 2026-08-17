@@ -22,7 +22,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background & Dual Logo Lokal (PLN & Danantara)."""
+    """Memeriksa status login dengan Full Background & Dual Logo Terintegrasi (PLN & Danantara)."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -56,7 +56,7 @@ def check_login():
     )
     danantara_src = get_image_base64(danantara_path)
 
-    # Styling CSS
+    # Styling CSS Adaptif Tema (Dark & Light Mode)
     st.markdown(
         """
         <style>
@@ -82,7 +82,7 @@ def check_login():
                 }
             }
 
-            /* Styling Form Login Glassmorphism Centered */
+            /* Styling Form Login Glassmorphism */
             div[data-testid="stForm"] {
                 background: rgba(15, 23, 42, 0.75) !important;
                 backdrop-filter: blur(20px) !important;
@@ -101,32 +101,42 @@ def check_login():
                 }
             }
 
-            /* Container Dual Logo */
+            /* Container & Wadah Logo Rapi */
             .logo-header-wrapper {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                gap: 20px;
-                margin-bottom: 20px;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .logo-box {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 8px 14px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                height: 48px;
             }
 
             .logo-pln {
-                height: 52px;
+                height: 36px;
                 width: auto;
                 object-fit: contain;
-                filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
             }
 
             .logo-danantara {
-                height: 44px;
+                height: 28px;
                 width: auto;
                 object-fit: contain;
-                filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
             }
 
             .logo-divider {
                 width: 1px;
-                height: 36px;
+                height: 32px;
                 background-color: rgba(255, 255, 255, 0.3);
             }
 
@@ -158,13 +168,17 @@ def check_login():
     _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        # Menampilkan Logo PLN dan Danantara berdampingan
+        # Menampilkan Logo PLN dan Danantara dalam Card Rapi
         st.markdown(
             f"""
             <div class="logo-header-wrapper">
-                <img src="{pln_src}" class="logo-pln" alt="Logo PLN">
+                <div class="logo-box">
+                    <img src="{pln_src}" class="logo-pln" alt="Logo PLN">
+                </div>
                 <div class="logo-divider"></div>
-                <img src="{danantara_src}" class="logo-danantara" alt="Logo Danantara">
+                <div class="logo-box">
+                    <img src="{danantara_src}" class="logo-danantara" alt="Logo Danantara">
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
