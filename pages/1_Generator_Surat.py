@@ -430,12 +430,6 @@ if excel_file and word_file:
         naming_column, folder_column, output_format = render_options(df)
         is_pdf = "PDF" in output_format
 
-        if is_pdf and not check_libreoffice_available():
-            st.warning(
-                "⚠️ LibreOffice tidak terdeteksi di server ini, sehingga output PDF tidak bisa diproses. "
-                "Silakan pilih format DOCX, atau hubungi Admin IT untuk memasang LibreOffice di server."
-            )
-
         st.markdown("<br>", unsafe_allow_html=True)
         generate_btn = st.button("⚡ MULAI PROSES GENERATE SURAT", type="primary", use_container_width=True)
 
@@ -445,39 +439,55 @@ if excel_file and word_file:
             with tempfile.TemporaryDirectory() as temp_dir:
                 documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
 
+                has_pdf = False
                 if is_pdf and check_libreoffice_available():
-                    status_text = st.empty()
-                    status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
-                    convert_batch_to_pdf(documents, temp_dir)
-                    status_text.empty()
+                    try:
+                        status_text = st.empty()
+                        status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
+                        convert_batch_to_pdf(documents, temp_dir)
+                        status_text.empty()
+                        has_pdf = True
+                    except Exception as e:
+                        st.warning(f"Gagal mengonversi PDF: {str(e)}")
 
-                zip_bytes = build_zip_archive(documents, is_pdf)
+                zip_bytes = build_zip_archive(documents, is_pdf and has_pdf)
 
-                # Ambil sampel dokumen pertama untuk preview cetak (jika PDF)
-                first_pdf_b64 = None
-                if is_pdf and check_libreoffice_available() and len(documents) > 0:
-                    first_pdf_path = os.path.splitext(documents[0]["temp_docx_path"])[0] + ".pdf"
-                    if os.path.exists(first_pdf_path):
-                        with open(first_pdf_path, "rb") as f:
-                            first_pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
+                # Ambil byte PDF pertama jika ada
+                first_pdf_bytes = None
+                first_pdf_name = "Sampel_Surat_1.pdf"
+                if has_pdf and len(documents) > 0:
+                    pdf_path = os.path.splitext(documents[0]["temp_docx_path"])[0] + ".pdf"
+                    if os.path.exists(pdf_path):
+                        with open(pdf_path, "rb") as f:
+                            first_pdf_bytes = f.read()
+                        first_pdf_name = f"Surat_{documents[0]['final_name']}.pdf"
 
             st.toast("🎉 Semua surat berhasil dibuat!", icon="⚡")
             st.success(f"🎉 Selesai! Berhasil memproses **{len(documents)} surat** secara otomatis.")
 
-            st.download_button(
-                label="⬇️ UNDUH ARSIP SURAT (.ZIP)",
-                data=zip_bytes,
-                file_name=f"Arsip_Surat_PLN_{'PDF' if is_pdf else 'DOCX'}.zip",
-                mime="application/zip",
-                use_container_width=True,
-            )
+            # Menampilkan Tombol Unduh Berdampingan
+            col_dl1, col_dl2 = st.columns(2)
 
-            if first_pdf_b64:
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown("##### 🖨️ Pratinjau Dokumen Siap Cetak")
-                st.markdown("Gunakan tombol cetak bawaan di dalam viewer dokumen di bawah ini untuk mencetak langsung ke printer:")
-                pdf_display = f'<iframe src="data:application/pdf;base64,{first_pdf_b64}" width="100%" height="600" type="application/pdf"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
+            with col_dl1:
+                st.download_button(
+                    label="⬇️ UNDUH SEMUA SURAT (.ZIP)",
+                    data=zip_bytes,
+                    file_name=f"Arsip_Surat_PLN_{'PDF' if is_pdf and has_pdf else 'DOCX'}.zip",
+                    mime="application/zip",
+                    use_container_width=True,
+                )
+
+            with col_dl2:
+                if first_pdf_bytes:
+                    st.download_button(
+                        label="📄 UNDUH SAMPEL PDF (SIAP CETAK)",
+                        data=first_pdf_bytes,
+                        file_name=first_pdf_name,
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
+                else:
+                    st.info("💡 Pilih **PDF Format** untuk mengaktifkan unduh PDF tunggal.")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
