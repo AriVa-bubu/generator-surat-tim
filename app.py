@@ -1,8 +1,6 @@
 import datetime as dt
 import os
 
-import numpy as np
-import pandas as pd
 import streamlit as st
 from PIL import Image
 
@@ -636,18 +634,42 @@ def render_quick_info_panel() -> None:
         )
 
 
-def render_activity_trend() -> None:
-    st.markdown('<div class="section-heading">📈 Tren Aktivitas & Pemantauan Operasional</div>', unsafe_allow_html=True)
-    st.caption(
-        "⚠️ Data di bawah ini masih **contoh/simulasi** — belum terhubung ke log penggunaan modul yang sebenarnya."
+SQRT3 = 1.732
+
+
+def render_quick_calculator() -> None:
+    st.markdown('<div class="section-heading">🧮 Kalkulator Cepat Konversi Listrik</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-subheading">Hitung estimasi Daya & Energi dari Tegangan dan Arus — praktis untuk cek cepat di lapangan.</div>',
+        unsafe_allow_html=True,
     )
 
-    # TODO: ganti dengan data log penggunaan modul yang sebenarnya
-    chart_data = pd.DataFrame(
-        np.random.randn(20, 3) + [10, 15, 20],
-        columns=["Validasi P2TL", "Clean Data AP2T", "Generator Surat"],
-    )
-    st.line_chart(chart_data)
+    col_input, col_result = st.columns(2)
+
+    with col_input:
+        fase = st.radio("Jenis Fase:", ["1 Phase", "3 Phase"], horizontal=True)
+        default_v = 220.0 if fase == "1 Phase" else 380.0
+        tegangan = st.number_input("Tegangan (V)", min_value=0.0, value=default_v, step=1.0)
+        arus = st.number_input("Arus (A)", min_value=0.0, value=0.0, step=0.1)
+        pf = st.number_input("Faktor Daya (Cos φ)", min_value=0.0, max_value=1.0, value=0.85, step=0.01)
+        jam_nyala = st.number_input(
+            "Jam Nyala (opsional, untuk hitung Energi)", min_value=0.0, value=0.0, step=0.5,
+            help="Kosongkan kalau cuma mau lihat Daya sesaat (kW), tanpa menghitung total Energi (kWh).",
+        )
+
+    if fase == "3 Phase":
+        daya_kw = (tegangan * arus * SQRT3 * pf) / 1000
+    else:
+        daya_kw = (tegangan * arus * pf) / 1000
+    energi_kwh = daya_kw * jam_nyala
+
+    with col_result:
+        st.markdown(kpi_card("⚡", "Daya Terhitung", f"{daya_kw:,.3f} kW", fase), unsafe_allow_html=True)
+        st.write("")
+        if jam_nyala > 0:
+            st.markdown(kpi_card("🔋", "Energi Terhitung", f"{energi_kwh:,.2f} kWh", f"selama {jam_nyala:.1f} jam"), unsafe_allow_html=True)
+        else:
+            st.markdown(kpi_card("🔋", "Energi Terhitung", "—", "isi Jam Nyala dulu"), unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -676,7 +698,7 @@ def main() -> None:
     render_footer()
     st.divider()
 
-    render_activity_trend()
+    render_quick_calculator()
 
 
 if __name__ == "__main__":
