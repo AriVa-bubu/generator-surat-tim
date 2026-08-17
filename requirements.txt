@@ -1,8 +1,8 @@
 streamlit
 pandas
 openpyxl
+pypdf
 docxtpl
 qrcode
 Pillow
 altair 
-pypdf
