@@ -1,6 +1,19 @@
+import base64
 import hashlib
 import os
 import streamlit as st
+
+
+def get_image_base64(path_to_file: str) -> str:
+    """Mengubah file gambar lokal menjadi string Base64 untuk tag HTML img."""
+    if os.path.exists(path_to_file):
+        with open(path_to_file, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+            ext = os.path.splitext(path_to_file)[1].replace(".", "")
+            if ext == "svg":
+                ext = "svg+xml"
+            return f"data:image/{ext};base64,{encoded_string}"
+    return ""
 
 
 def make_hash(password: str) -> str:
@@ -9,7 +22,7 @@ def make_hash(password: str) -> str:
 
 
 def check_login():
-    """Memeriksa status login dengan Full Background Gedung & Minimalist Login Card."""
+    """Memeriksa status login dengan Full Background Gedung & Single Logo PLN Elegan."""
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
@@ -25,7 +38,18 @@ def check_login():
         )
         st.stop()
 
-    # CSS Custom: Modern Glassmorphism Centered Login
+    # Load Logo PLN (Prioritas File Lokal, Fallback ke URL Wikimedia SVG)
+    pln_path = (
+        "logo_pln.png"
+        if os.path.exists("logo_pln.png")
+        else "assets/logo_pln.png"
+    )
+    pln_src = (
+        get_image_base64(pln_path)
+        or "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
+    )
+
+    # Styling CSS Adaptif Elegan (Dark & Light Mode)
     st.markdown(
         """
         <style>
@@ -35,7 +59,7 @@ def check_login():
                 font-family: 'Plus Jakarta Sans', sans-serif;
             }
 
-            /* Full Background Gambar Gedung */
+            /* Full Background Gambar Gedung Modern */
             .stApp {
                 background-size: cover !important;
                 background-position: center !important;
@@ -51,7 +75,7 @@ def check_login():
                 }
             }
 
-            /* Styling Kartu Form Login Glassmorphism Centered */
+            /* Styling Form Login Glassmorphism Minimalis Elegan */
             div[data-testid="stForm"] {
                 background: rgba(15, 23, 42, 0.75) !important;
                 backdrop-filter: blur(20px) !important;
@@ -70,8 +94,8 @@ def check_login():
                 }
             }
 
-            /* Logo Styling */
-            .pln-logo-wrapper {
+            /* Logo Wrapper & Glow Effect Elegan */
+            .pln-logo-container {
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -79,13 +103,35 @@ def check_login():
             }
 
             .pln-logo-img {
-                width: 80px;
-                height: auto;
+                height: 72px;
+                width: auto;
                 object-fit: contain;
-                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+                filter: drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.35));
+                transition: transform 0.3s ease;
             }
 
-            /* Tombol Login */
+            .pln-logo-img:hover {
+                transform: scale(1.04);
+            }
+
+            /* Subtitle & Header */
+            .login-header-title {
+                text-align: center;
+                font-weight: 800;
+                font-size: 1.6rem;
+                margin-bottom: 6px;
+                letter-spacing: -0.02em;
+            }
+
+            .login-header-subtitle {
+                text-align: center;
+                opacity: 0.8;
+                font-size: 0.9rem;
+                margin-bottom: 28px;
+                line-height: 1.5;
+            }
+
+            /* Tombol Login Accent Blue */
             .stButton > button {
                 background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
                 border: none !important;
@@ -95,45 +141,33 @@ def check_login():
                 font-size: 1rem !important;
                 color: white !important;
                 box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.5) !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .stButton > button:hover {
+                box-shadow: 0 12px 24px -4px rgba(2, 132, 199, 0.7) !important;
+                transform: translateY(-1px);
             }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    logo_path = "logo_pln.png"
-    if not os.path.exists(logo_path):
-        logo_path = "assets/logo_pln.png"
-
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
 
     # Layout Terpusat (Centered 1 Kolom)
     _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        # Menampilkan Logo PLN Transparan & Rapi
-        logo_url = (
-            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
-        )
-
+        # Menampilkan Logo PLN Tunggal yang Elegan
         st.markdown(
             f"""
-            <div class="pln-logo-wrapper">
-                <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
+            <div class="pln-logo-container">
+                <img src="{pln_src}" class="pln-logo-img" alt="Logo PLN">
             </div>
+            <h2 class="login-header-title">🔒 Selamat Datang</h2>
+            <p class="login-header-subtitle">Sistem Manajemen & Pelayanan Listrik PLN</p>
             """,
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            "<h2 style='text-align: center; margin-bottom: 4px; font-weight:"
-            " 800;'>🔒 Selamat Datang</h2>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            "<p style='text-align: center; opacity: 0.8; font-size: 0.9rem;"
-            " margin-bottom: 24px;'>Sistem Manajemen & Pelayanan Listrik"
-            " PLN</p>",
             unsafe_allow_html=True,
         )
 
