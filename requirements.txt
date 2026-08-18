@@ -1,8 +1,9 @@
 streamlit
 pandas
 openpyxl
-pypdf
+pypdf==4.2.0
 docxtpl
 qrcode
 Pillow
-altair 
+altair
+pypdf
