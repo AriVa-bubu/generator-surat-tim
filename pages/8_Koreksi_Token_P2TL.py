@@ -1,6 +1,4 @@
-import base64
 import io
-import os
 import statistics
 
 import pandas as pd
@@ -9,11 +7,6 @@ import streamlit as st
 # =============================================================================
 # HELPERS
 # =============================================================================
-
-def get_base64_of_bin_file(bin_file: str) -> str:
-    with open(bin_file, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
 
 SQRT3 = 1.732
 
@@ -56,23 +49,6 @@ def calc_tegangan_turun(v_supply, v_display, arus, cos_a, total_jam) -> float:
     return (selisih_v * arus * cos_a * total_jam) / 1000
 
 
-def kpi_card(icon: str, label: str, value: str, delta: str, tone: str = "neutral") -> str:
-    tone_colors = {
-        "neutral": ("#94a3b8", "rgba(148, 163, 184, 0.12)"),
-        "danger": ("#fca5a5", "rgba(239, 68, 68, 0.15)"),
-        "success": ("#86efac", "rgba(34, 197, 94, 0.15)"),
-    }
-    color, bg = tone_colors.get(tone, tone_colors["neutral"])
-    return f"""
-    <div class="kpi-card">
-        <div class="kpi-icon">{icon}</div>
-        <div class="kpi-label">{label}</div>
-        <div class="kpi-value">{value}</div>
-        <span class="kpi-delta" style="color:{color}; background:{bg};">{delta}</span>
-    </div>
-    """
-
-
 def build_excel_summary(rows: list) -> bytes:
     df = pd.DataFrame(rows, columns=["Item", "Nilai"])
     buffer = io.BytesIO()
@@ -81,100 +57,20 @@ def build_excel_summary(rows: list) -> bytes:
     return buffer.getvalue()
 
 
+from module_style import apply_module_style, render_hero_banner, kpi_card
+
 # =============================================================================
 # KONFIGURASI HALAMAN & STYLE
 # =============================================================================
 
-logo_path = "logo_pln.png"
-logo_base64 = get_base64_of_bin_file(logo_path) if os.path.exists(logo_path) else ""
-
 st.set_page_config(
     page_title="Koreksi Token P2TL - PLN Platform",
-    page_icon=logo_path if os.path.exists(logo_path) else "⚡",
+    page_icon="⚡",
     layout="wide",
 )
 
-st.markdown(
-    """
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .main .block-container { padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1200px; }
-
-        .hero-banner {
-            background: linear-gradient(135deg, #0b2545 0%, #134074 60%, #00a8e8 100%);
-            border-radius: 16px; padding: 24px 28px; color: white; margin-bottom: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 168, 232, 0.2);
-            display: flex; align-items: center; gap: 20px;
-        }
-        .hero-logo-img { width: 70px; height: auto; border-radius: 8px; background: white; padding: 4px; }
-        .hero-badge {
-            background-color: #ffb703; color: #000; font-weight: 800; font-size: 0.75rem;
-            padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 6px;
-        }
-        .hero-title { font-size: 1.8rem; font-weight: 800; margin: 0; }
-
-        .step-card {
-            background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 22px; margin-bottom: 20px;
-        }
-        .step-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-            border-bottom: 1px solid #334155; padding-bottom: 10px;
-        }
-        .step-title { font-size: 1.15rem; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 10px; }
-        .step-number {
-            background: linear-gradient(135deg, #0284c7, #0369a1); color: white; font-size: 0.85rem; font-weight: 700;
-            width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-        }
-
-        .kpi-card {
-            background: linear-gradient(160deg, #1e293b 0%, #172033 100%); border: 1px solid #2b3a52;
-            border-radius: 16px; padding: 18px 20px; height: 100%;
-        }
-        .kpi-icon { font-size: 1.4rem; margin-bottom: 8px; display: inline-block; }
-        .kpi-label { font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
-        .kpi-value { font-size: 1.55rem; font-weight: 800; color: #f8fafc; margin: 4px 0 8px 0; }
-        .kpi-delta {
-            display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700;
-            padding: 3px 9px; border-radius: 999px;
-        }
-
-        .stButton > button {
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: none !important;
-            border-radius: 10px !important; font-weight: 700 !important; padding: 0.75rem 1.5rem !important;
-        }
-
-        .result-banner-tagih {
-            background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); border: 1px solid #ef4444;
-            border-radius: 16px; padding: 24px 28px; margin: 12px 0;
-        }
-        .result-banner-kembali {
-            background: linear-gradient(135deg, #14532d 0%, #052e16 100%); border: 1px solid #22c55e;
-            border-radius: 16px; padding: 24px 28px; margin: 12px 0;
-        }
-        .result-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #e2e8f0; margin-bottom: 6px; }
-        .result-value { font-size: 2rem; font-weight: 800; color: #ffffff; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-logo_html = (
-    f'<img src="data:image/png;base64,{logo_base64}" class="hero-logo-img" alt="PLN Logo">' if logo_base64 else "⚡"
-)
-
-st.markdown(
-    f"""
-    <div class="hero-banner">
-        <div>{logo_html}</div>
-        <div>
-            <span class="hero-badge">MODUL 8</span>
-            <div class="hero-title">⚖️ Koreksi Token P2TL (Tagihan / Pengembalian)</div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+apply_module_style()
+render_hero_banner(module_number=8, icon="⚖️", title="Koreksi Token P2TL (Tagihan / Pengembalian)")
 
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(
