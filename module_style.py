@@ -26,24 +26,52 @@ MODULE_CSS = """
     html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
     .main .block-container { padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1200px; }
 
-    /* ---------- HERO BANNER ---------- */
+    /* ---------- HERO BANNER (gradient animasi + tekstur, konsisten dgn halaman utama) ---------- */
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .hero-banner {
-        background: linear-gradient(135deg, #0b2545 0%, #134074 60%, #00a8e8 100%);
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(-45deg, #0b2545, #134074, #00a8e8, #0b2545);
+        background-size: 300% 300%;
+        animation: gradientBG 10s ease infinite;
         border-radius: 16px; padding: 24px 28px; color: white; margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(0, 168, 232, 0.2);
+        box-shadow: 0 15px 30px -8px rgba(0, 168, 232, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         display: flex; align-items: center; gap: 20px;
     }
-    .hero-logo-img { width: 70px; height: auto; border-radius: 8px; background: white; padding: 4px; }
+    .hero-banner::before {
+        content: "";
+        position: absolute; inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+        background-size: 20px 20px;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    .hero-logo-img { width: 70px; height: auto; border-radius: 8px; background: white; padding: 4px; position: relative; z-index: 1; }
     .hero-badge {
         background-color: #ffb703; color: #000; font-weight: 800; font-size: 0.75rem;
         padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 6px;
+        position: relative; z-index: 1;
     }
-    .hero-title { font-size: 1.8rem; font-weight: 800; margin: 0; }
+    .hero-title { font-size: 1.8rem; font-weight: 800; margin: 0; position: relative; z-index: 1; }
 
-    /* ---------- STEP CARD ---------- */
+    /* ---------- STEP CARD (aksen kiri + hover halus + animasi masuk) ---------- */
     .step-card {
-        background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 22px; margin-bottom: 20px;
+        background-color: #0f172a; border: 1px solid #1e293b; border-left: 3px solid #0284c7;
+        border-radius: 16px; padding: 22px; margin-bottom: 20px;
+        animation: fadeInUp 0.4s ease-out;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
+    .step-card:hover { border-left-color: #38bdf8; box-shadow: 0 8px 20px -10px rgba(56, 189, 248, 0.25); }
     .step-header {
         display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
         border-bottom: 1px solid #334155; padding-bottom: 10px;
@@ -52,12 +80,19 @@ MODULE_CSS = """
     .step-number {
         background: linear-gradient(135deg, #0284c7, #0369a1); color: white; font-size: 0.85rem; font-weight: 700;
         width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
     }
 
-    /* ---------- STAT / KPI CARD ---------- */
+    /* ---------- STAT / KPI CARD (hover lift, lebih hidup) ---------- */
     .stat-card, .kpi-card {
         background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
         border: 1px solid #2b3a52; border-radius: 16px; padding: 18px 20px; height: 100%;
+        transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    }
+    .stat-card:hover, .kpi-card:hover {
+        transform: translateY(-3px);
+        border-color: #38bdf8;
+        box-shadow: 0 10px 22px -8px rgba(56, 189, 248, 0.3);
     }
     .stat-card { border-left: 4px solid #38bdf8; border-radius: 10px; padding: 14px 18px; }
     .stat-label, .kpi-label {
@@ -75,10 +110,12 @@ MODULE_CSS = """
     .result-banner-tagih {
         background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); border: 1px solid #ef4444;
         border-radius: 16px; padding: 24px 28px; margin: 12px 0;
+        animation: fadeInUp 0.35s ease-out;
     }
     .result-banner-kembali {
         background: linear-gradient(135deg, #14532d 0%, #052e16 100%); border: 1px solid #22c55e;
         border-radius: 16px; padding: 24px 28px; margin: 12px 0;
+        animation: fadeInUp 0.35s ease-out;
     }
     .result-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #e2e8f0; margin-bottom: 6px; }
     .result-value { font-size: 2rem; font-weight: 800; color: #ffffff; }
@@ -86,11 +123,18 @@ MODULE_CSS = """
     /* ---------- MISC ---------- */
     div[data-testid="stFileUploader"] {
         background-color: #1e293b; border: 1px dashed #475569; border-radius: 12px; padding: 8px;
+        transition: border-color 0.2s ease;
     }
+    div[data-testid="stFileUploader"]:hover { border-color: #38bdf8; }
     div[data-testid="stExpander"] { border: 1px solid #2b3a52 !important; border-radius: 12px !important; }
     .stButton > button {
         background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important; border: none !important;
         border-radius: 10px !important; font-weight: 700 !important; padding: 0.75rem 1.5rem !important;
+        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 18px -6px rgba(2, 132, 199, 0.45) !important;
     }
 
     /* ---------- RESPONSIVE (HP / tablet) ---------- */
