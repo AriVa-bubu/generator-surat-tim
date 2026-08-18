@@ -549,8 +549,29 @@ if excel_file and word_file:
     except Exception as e:
         st.error(f"Terjadi kesalahan sistem: {str(e)}")
 
+
 else:
     st.info(
         "💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word**"
         " di atas untuk membuka panel pengaturan."
     )
+    
+    # -------------------------------------------------------------------------
+    # PANEL PANDUAN / PETUNJUK PENGGUNAAN
+    # -------------------------------------------------------------------------
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("📖 **Panduan & Cara Penggunaan Aplikasi**", expanded=True):
+        st.markdown(
+            """
+            ### 🛠️ Langkah Penggunaan:
+            1. **Unggah Data Excel (`.xlsx`)**: Pastikan kolom header sesuai dengan nama variabel tag yang ada di template Word.
+            2. **Unggah Template Word (`.docx`)**: Format tag di template menggunakan kurung kurawal ganda, contoh: `{{ NAMA }}`, `{{ ALAMAT }}`.
+            3. **Atur Penamaan & Pengelompokan**: Pilih kolom acuan untuk penamaan file PDF yang dihasilkan.
+            4. **Generate & Unduh**: Klik tombol **Mulai Proses**, lalu unduh atau cetak langsung PDF gabungan yang telah dibuat.
+
+            ---
+            ⚠️ **Catatan Sistem:**
+            * Sistem akan mengambil **halaman pertama** dari setiap dokumen untuk memastikan format 1 surat = 1 halaman.
+            * Pastikan LibreOffice terpasang pada server hosting Anda untuk mendukung konversi `.docx` ke `.pdf`.
+            """
+        )
