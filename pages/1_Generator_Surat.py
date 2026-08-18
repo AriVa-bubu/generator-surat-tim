@@ -5,9 +5,9 @@ import re
 import shutil
 import subprocess
 import tempfile
-import zipfile
 
 import pandas as pd
+import pypdf
 import streamlit as st
 import streamlit.components.v1 as components
 from docxtpl import DocxTemplate
@@ -44,27 +44,54 @@ def build_unique_name(base_name: str, folder_path: str, used_names: dict) -> str
     return base_name if count == 0 else f"{base_name}_{count + 1}"
 
 
-def check_libreoffice_available() -> bool:
-    return (shutil.which("libreoffice") is not None) or (shutil.which("soffice") is not None)
-
-
 def merge_pdfs_dynamically(pdf_paths: list, output_stream):
-    """Import pypdf/PyPDF2 secara dinamis saat dibutuhkan."""
-    try:
-        from pypdf import PdfMerger
-    except ImportError:
-        try:
-            from PyPDF2 import PdfMerger
-        except ImportError:
-            raise RuntimeError("Library `pypdf` atau `PyPDF2` tidak ditemukan. Pastikan `pypdf` ada di requirements.txt dan lakukan Reboot App.")
+    """Menggabungkan seluruh file PDF menjadi 1 file multi-halaman.
 
-    merger = PdfMerger()
+    Hanya mengambil halaman pertama dari setiap file untuk mencegah halaman
+    bocor.
+    """
+    merger = pypdf.PdfMerger()
     for pdf_path in pdf_paths:
         if os.path.exists(pdf_path):
-            merger.append(pdf_path)
-    
+            reader = pypdf.PdfReader(pdf_path)
+            # Mengambil hanya halaman pertama (indeks 0 hingga 1) agar tepat 1 surat = 1 halaman
+            if len(reader.pages) > 0:
+                merger.append(reader, pages=(0, 1))
+
     merger.write(output_stream)
     merger.close()
+
+
+def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
+    """Mengonversi berkas .docx ke .pdf menggunakan LibreOffice."""
+    docx_paths = [doc["temp_docx_path"] for doc in documents]
+    if not docx_paths:
+        return
+
+    libre_cmd = shutil.which("libreoffice") or shutil.which("soffice")
+    if not libre_cmd:
+        raise RuntimeError(
+            "LibreOffice tidak ditemukan di server. Pastikan 'packages.txt'"
+            " memuat 'libreoffice'."
+        )
+
+    cmd = [
+        libre_cmd,
+        "--headless",
+        "--convert-to",
+        "pdf",
+        "--outdir",
+        temp_dir,
+    ] + docx_paths
+    result = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            "Konversi PDF gagal. Detail: "
+            + result.stderr.decode(errors="ignore")[:500]
+        )
 
 
 # =============================================================================
@@ -72,7 +99,9 @@ def merge_pdfs_dynamically(pdf_paths: list, output_stream):
 # =============================================================================
 
 logo_path = "logo_pln.png"
-logo_base64 = get_base64_of_bin_file(logo_path) if os.path.exists(logo_path) else ""
+logo_base64 = (
+    get_base64_of_bin_file(logo_path) if os.path.exists(logo_path) else ""
+)
 
 st.set_page_config(
     page_title="Generator Surat - PLN Platform",
@@ -82,6 +111,7 @@ st.set_page_config(
 
 try:
     from auth import check_login, render_logout_button
+
     check_login()
     render_logout_button()
 except ImportError:
@@ -218,7 +248,8 @@ st.markdown(
 )
 
 logo_html = (
-    f'<img src="data:image/png;base64,{logo_base64}" class="hero-logo-img" alt="PLN Logo">'
+    f'<img src="data:image/png;base64,{logo_base64}" class="hero-logo-img"'
+    ' alt="PLN Logo">'
     if logo_base64
     else "⚡"
 )
@@ -257,21 +288,40 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("**📊 Data Excel Target (`.xlsx`)**")
-    excel_file = st.file_uploader("Pilih file excel", type=["xlsx", "xls"], key="excel_uploader")
+    excel_file = st.file_uploader(
+        "Pilih file excel", type=["xlsx", "xls"], key="excel_uploader"
+    )
 
 with col2:
     st.markdown("**📝 Template Surat (`.docx`)**")
-    word_file = st.file_uploader("Pilih template word", type=["docx"], key="word_uploader")
+    word_file = st.file_uploader(
+        "Pilih template word", type=["docx"], key="word_uploader"
+    )
 
 
 def render_summary_cards(df: pd.DataFrame) -> None:
     s1, s2, s3 = st.columns(3)
     with s1:
-        st.markdown(f'<div class="stat-card"><div class="stat-label">Total Surat Dicetak</div><div class="stat-value">{len(df)} Dokumen</div></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="stat-card"><div class="stat-label">Total Surat'
+            ' Dicetak</div><div class="stat-value">'
+            f"{len(df)} Dokumen</div></div>",
+            unsafe_allow_html=True,
+        )
     with s2:
-        st.markdown(f'<div class="stat-card"><div class="stat-label">Variabel Kolom Excel</div><div class="stat-value">{len(df.columns)} Kolom</div></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="stat-card"><div class="stat-label">Variabel Kolom'
+            ' Excel</div><div class="stat-value">'
+            f"{len(df.columns)} Kolom</div></div>",
+            unsafe_allow_html=True,
+        )
     with s3:
-        st.markdown('<div class="stat-card"><div class="stat-label">Status File Template</div><div class="stat-value" style="color:#4ade80;">Ready ✓</div></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="stat-card"><div class="stat-label">Status File'
+            ' Template</div><div class="stat-value"'
+            ' style="color:#4ade80;">Ready ✓</div></div>',
+            unsafe_allow_html=True,
+        )
 
 
 def render_options(df: pd.DataFrame):
@@ -290,16 +340,28 @@ def render_options(df: pd.DataFrame):
     c_opt1, c_opt2 = st.columns(2)
 
     with c_opt1:
-        naming_column = st.selectbox("Penamaan File Berdasarkan:", options=df.columns.tolist(), index=0)
+        naming_column = st.selectbox(
+            "Penamaan File Berdasarkan:", options=df.columns.tolist(), index=0
+        )
 
     with c_opt2:
         options_folder = [NO_FOLDER_OPTION] + df.columns.tolist()
-        folder_column = st.selectbox("Pengelompokan Sub-Folder (Opsional):", options=options_folder, index=0)
+        folder_column = st.selectbox(
+            "Pengelompokan Sub-Folder (Opsional):",
+            options=options_folder,
+            index=0,
+        )
 
     return naming_column, folder_column
 
 
-def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: str, folder_column: str, temp_dir: str):
+def render_docx_batch(
+    df: pd.DataFrame,
+    template_bytes: bytes,
+    naming_column: str,
+    folder_column: str,
+    temp_dir: str,
+):
     documents = []
     used_names: dict = {}
     total_rows = len(df)
@@ -340,22 +402,6 @@ def render_docx_batch(df: pd.DataFrame, template_bytes: bytes, naming_column: st
     return documents
 
 
-def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
-    docx_paths = [doc["temp_docx_path"] for doc in documents]
-    if not docx_paths:
-        return
-
-    libre_cmd = shutil.which("libreoffice") or shutil.which("soffice")
-    if not libre_cmd:
-        raise RuntimeError("LibreOffice tidak ditemukan di server. Pastikan 'packages.txt' memuat 'libreoffice'.")
-
-    cmd = [libre_cmd, "--headless", "--convert-to", "pdf", "--outdir", temp_dir] + docx_paths
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    if result.returncode != 0:
-        raise RuntimeError("Konversi PDF gagal. Detail: " + result.stderr.decode(errors="ignore")[:500])
-
-
 # =============================================================================
 # ALUR UTAMA
 # =============================================================================
@@ -363,7 +409,13 @@ def convert_batch_to_pdf(documents: list, temp_dir: str) -> None:
 if excel_file and word_file:
     try:
         df = pd.read_excel(excel_file)
-        df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x) if col.dtype == "object" else col)
+        df = df.apply(
+            lambda col: col.map(
+                lambda x: x.strip() if isinstance(x, str) else x
+            )
+            if col.dtype == "object"
+            else col
+        )
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("##### 📈 Ringkasan Data Rencana Cetak")
@@ -377,42 +429,67 @@ if excel_file and word_file:
         naming_column, folder_column = render_options(df)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        generate_btn = st.button("⚡ MULAI PROSES GENERATE SURAT", type="primary", use_container_width=True)
+        generate_btn = st.button(
+            "⚡ MULAI PROSES GENERATE SURAT",
+            type="primary",
+            use_container_width=True,
+        )
 
         if generate_btn:
             template_bytes = word_file.getvalue()
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 # 1. Render seluruh dokumen DOCX
-                documents = render_docx_batch(df, template_bytes, naming_column, folder_column, temp_dir)
+                documents = render_docx_batch(
+                    df,
+                    template_bytes,
+                    naming_column,
+                    folder_column,
+                    temp_dir,
+                )
 
                 status_text = st.empty()
-                
+
                 # 2. Konversi DOCX ke PDF
                 status_text.text("⏳ Mengonversi seluruh dokumen ke PDF...")
                 convert_batch_to_pdf(documents, temp_dir)
 
                 # 3. Gabungkan seluruh file PDF menjadi 1 file multi-halaman
-                status_text.text("⏳ Menggabungkan seluruh surat menjadi 1 file PDF multi-halaman...")
-                
-                pdf_paths = [os.path.splitext(doc["temp_docx_path"])[0] + ".pdf" for doc in documents]
+                status_text.text(
+                    "⏳ Menggabungkan seluruh surat menjadi 1 file PDF"
+                    " multi-halaman..."
+                )
+
+                pdf_paths = [
+                    os.path.splitext(doc["temp_docx_path"])[0] + ".pdf"
+                    for doc in documents
+                ]
                 merged_bytes_io = io.BytesIO()
-                
+
                 merge_pdfs_dynamically(pdf_paths, merged_bytes_io)
 
                 merged_pdf_bytes = merged_bytes_io.getvalue()
-                merged_pdf_b64 = base64.b64encode(merged_pdf_bytes).decode("utf-8")
+                merged_pdf_b64 = base64.b64encode(merged_pdf_bytes).decode(
+                    "utf-8"
+                )
                 status_text.empty()
 
                 st.toast("🎉 Semua surat berhasil digabungkan!", icon="⚡")
-                st.success(f"🎉 Selesai! Berhasil menggabungkan **{len(documents)} surat** menjadi 1 file PDF multi-halaman.")
+                st.success(
+                    "🎉 Selesai! Berhasil menggabungkan"
+                    f" **{len(documents)} surat** menjadi 1 file PDF"
+                    " multi-halaman."
+                )
 
                 col_dl, col_print = st.columns(2)
 
                 # Tombol Unduh PDF Multi-halaman
                 with col_dl:
                     st.download_button(
-                        label=f"⬇️ UNDUH PDF GABUNGAN ({len(documents)} HALAMAN)",
+                        label=(
+                            "⬇️ UNDUH PDF GABUNGAN"
+                            f" ({len(documents)} HALAMAN)"
+                        ),
                         data=merged_pdf_bytes,
                         file_name="Gabungan_Surat_PLN.pdf",
                         mime="application/pdf",
@@ -473,4 +550,7 @@ if excel_file and word_file:
         st.error(f"Terjadi kesalahan sistem: {str(e)}")
 
 else:
-    st.info("💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word** di atas untuk membuka panel pengaturan.")
+    st.info(
+        "💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word**"
+        " di atas untuk membuka panel pengaturan."
+    )
