@@ -51,9 +51,21 @@ MODULE_CSS = """
     .hero-banner::before {
         content: "";
         position: absolute; inset: 0;
-        background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
-        background-size: 20px 20px;
-        opacity: 0.5;
+        background-image:
+            radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.30) 0%, transparent 42%),
+            radial-gradient(circle at 4% 108%, rgba(255, 183, 3, 0.18) 0%, transparent 45%),
+            radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+        background-size: auto, auto, 20px 20px;
+        pointer-events: none;
+    }
+    .hero-banner::after {
+        content: "⚡";
+        position: absolute;
+        right: -18px; bottom: -38px;
+        font-size: 170px;
+        line-height: 1;
+        opacity: 0.08;
+        transform: rotate(-12deg);
         pointer-events: none;
     }
     .hero-logo-img { width: 70px; height: auto; border-radius: 8px; background: white; padding: 4px; position: relative; z-index: 1; }
