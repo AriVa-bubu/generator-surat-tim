@@ -97,6 +97,11 @@ MODULES = [
         "title": "Kalkulator Konversi Listrik",
         "desc": "Konversi cepat Tegangan × Arus menjadi Daya (Watt) dan Energi (kWh) untuk perhitungan lapangan.",
     },
+    {
+        "no": 10, "file": "pages/10_Kalkulator_Susut_Jaringan.py", "icon": "🕸️",
+        "title": "Kalkulator Susut Jaringan",
+        "desc": "Hitung persentase susut energi (kirim vs terjual) per feeder dan identifikasi indikasi susut non-teknis.",
+    },
 ]
 
 
@@ -360,11 +365,11 @@ def render_header() -> None:
     st.markdown(
         """
         <div class="header-banner">
-            <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.5.0</div>
+            <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.6.0</div>
             <h1 class="header-title">⚡ Portal Operasional & Layanan Digital PLN</h1>
             <p class="header-subtitle">
                 Pusat otomasi kerja harian PLN: Pembuatan Surat Massal, P2TL, Validasi Excel,
-                QR Code Generator, Kalkulator Tambah Daya, & Konversi Listrik — semua dalam satu platform.
+                QR Code Generator, Kalkulator Tambah Daya, Konversi Listrik, & Susut Jaringan — semua dalam satu platform.
             </p>
         </div>
         """,
@@ -534,7 +539,7 @@ def render_footer() -> None:
             """
             <div class="footer-heading">ℹ️ Info Sistem</div>
             <span style="color:#cbd5e1; font-size:0.9rem;">
-                Versi: <code>v2.5.0</code><br>
+                Versi: <code>v2.6.0</code><br>
                 Status: 🟢 Normal<br>
                 Environment: Production
             </span>
