@@ -7,7 +7,7 @@ import streamlit as st
 try:
     from module_style import apply_module_style, kpi_card, render_hero_banner
 except ImportError:
-    # Fallback sederhana jika module_style tidak ditemukan
+
     def apply_module_style():
         pass
 
@@ -56,7 +56,6 @@ REQUIRED_CANONICAL = ["Nomer Meter", "Pem kWh", "Tanggal Bayar"]
 
 def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    # Hapus karakter non-breaking space (\xa0) dan spasi bawaan ekspor AP2T
     df.columns = [str(c).replace("\xa0", "").strip() for c in df.columns]
     lower_map = {c.lower(): c for c in df.columns}
 
@@ -76,14 +75,12 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_token_history(uploaded_file) -> pd.DataFrame:
-    # Reset pointer file stream Streamlit
     uploaded_file.seek(0)
 
     if uploaded_file.name.lower().endswith(".csv"):
         raw = pd.read_csv(uploaded_file)
         df = standardize_columns(raw)
     else:
-        # Gunakan pd.ExcelFile agar aman dibaca berulang tiap sheet pada UploadedFile
         excel_file = pd.ExcelFile(uploaded_file)
         frames = []
         for sheet_name in excel_file.sheet_names:
@@ -100,7 +97,6 @@ def load_token_history(uploaded_file) -> pd.DataFrame:
             )
         df = pd.concat(frames, ignore_index=True)
 
-    # Clean data Nomer Meter, Pem kWh, dan Tanggal Bayar
     df["Nomer Meter"] = (
         df["Nomer Meter"]
         .astype(str)
@@ -116,28 +112,29 @@ def load_token_history(uploaded_file) -> pd.DataFrame:
     return df
 
 
-def compute_daily_rate(
+def compute_daily_rate_pln(
     meter_df: pd.DataFrame, window_days: int | None
 ) -> tuple[float, dt.datetime]:
+    """Menghitung rata-rata harian berbasis standar PLN (Total kWh / Rentang Hari Real)."""
     last_date = meter_df["Tanggal Bayar"].max()
-    first_date_overall = meter_df["Tanggal Bayar"].min()
-    # Total rentang hari yang BENAR-BENAR ada datanya untuk meter ini.
-    total_history_days = max((last_date - first_date_overall).days, 1)
 
     if window_days is not None:
         start_window = last_date - pd.Timedelta(days=window_days)
         window_df = meter_df[meter_df["Tanggal Bayar"] >= start_window]
-        # PERBAIKAN: jangan paksa bagi dengan angka window (30/60/90/180)
-        # kalau riwayat transaksi yang tersedia lebih pendek dari window itu.
-        # Sebelumnya span_days selalu = window_days, sehingga kalau history
-        # cuma 15 hari tapi window dipilih 90 hari, rate jadi dibagi 90
-        # (bukan 15) -> rate terhitung jauh lebih kecil dari kenyataan.
-        span_days = min(window_days, total_history_days)
     else:
         window_df = meter_df
-        span_days = total_history_days
 
-    total_kwh = window_df["Pem kWh"].sum()
+    if len(window_df) > 1:
+        first_trx = window_df["Tanggal Bayar"].min()
+        last_trx = window_df["Tanggal Bayar"].max()
+        # Menggunakan selisih hari nyata antar transaksi awal dan akhir
+        span_days = max((last_trx - first_trx).days, 1)
+        # Pada metode transaksi interval, kWh transaksi pertama dianggap deposit awal
+        total_kwh = window_df["Pem kWh"].iloc[1:].sum() if len(window_df) > 1 else window_df["Pem kWh"].sum()
+    else:
+        span_days = 30
+        total_kwh = window_df["Pem kWh"].sum()
+
     rate = total_kwh / span_days if span_days > 0 else 0.0
     return round(rate, 3), last_date
 
@@ -210,7 +207,7 @@ def build_projection_chart(proj_df: pd.DataFrame, depletion_date):
 
 
 # =============================================================================
-# KONFIGURASI HALAMAN & LAYOUT
+# LAYOUT & INTERFACE
 # =============================================================================
 
 st.set_page_config(
@@ -227,27 +224,11 @@ render_hero_banner(
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(
         """
-        1. **Upload riwayat pembelian token** (Excel/CSV) dari menu Info Prepaid → Transaksi Pembelian Token di AP2T.
-        2. Kolom wajib: `Nomer Meter`, `Pem kWh`, `Tanggal Bayar`. Kolom `Token`, `Tarif`, `Daya` opsional.
-        3. Sistem menghitung **rata-rata pemakaian per hari** dari total kWh yang dibeli dibagi jangka waktu.
-        4. Pilih rentang tanggal untuk melihat **proyeksi sisa token** ke depan, dan sistem akan memperkirakan kapan token diperkirakan habis.
+        1. **Upload riwayat pembelian token** (Excel/CSV) dari AP2T.
+        2. Kolom wajib: `Nomer Meter`, `Pem kWh`, `Tanggal Bayar`.
+        3. Rata-rata harian dihitung menggunakan rasio interval pembelian riil PLN.
         """
     )
-
-# =============================================================================
-# UPLOAD & PROSES
-# =============================================================================
-
-st.markdown(
-    """
-    <div class="step-card">
-        <div class="step-header">
-            <div class="step-title"><span class="step-number">1</span> Unggah Riwayat Pembelian Token</div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 uploaded_file = st.file_uploader(
     "Pilih file Excel/CSV riwayat token",
@@ -273,17 +254,6 @@ if uploaded_file:
             )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(
-                """
-                <div class="step-card">
-                    <div class="step-header">
-                        <div class="step-title"><span class="step-number">2</span> Pengaturan Prediksi</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
             c1, c2 = st.columns(2)
             with c1:
                 window_option = st.selectbox(
@@ -304,7 +274,7 @@ if uploaded_file:
                 "180 Hari Terakhir": 180,
                 "Seluruh Riwayat": None,
             }
-            daily_rate, last_purchase_date = compute_daily_rate(
+            daily_rate, last_purchase_date = compute_daily_rate_pln(
                 meter_df, window_map[window_option]
             )
             today = dt.date.today()
@@ -315,11 +285,10 @@ if uploaded_file:
 
             with c2:
                 current_balance = st.number_input(
-                    "Sisa Token Saat Ini (kWh) — kosongkan/pakai estimasi jika tidak tahu pastinya:",
+                    "Sisa Token Saat Ini (kWh):",
                     min_value=0.0,
                     value=float(est_balance),
                     step=1.0,
-                    help="Default dihitung otomatis dari pembelian terakhir dikurangi estimasi pemakaian sampai hari ini.",
                 )
 
             date_range = st.date_input(
@@ -336,8 +305,6 @@ if uploaded_file:
             )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("##### 📊 Hasil Prediksi")
-
             k1, k2, k3 = st.columns(3)
             with k1:
                 st.markdown(
@@ -375,29 +342,6 @@ if uploaded_file:
                     unsafe_allow_html=True,
                 )
 
-            if depletion_date and start_date <= depletion_date <= end_date:
-                st.warning(
-                    f"⚠️ Berdasarkan pola pemakaian saat ini, token diperkirakan **habis pada {depletion_date.strftime('%d %B %Y')}**, "
-                    "yaitu dalam rentang tanggal yang kamu pilih."
-                )
-            elif depletion_date and depletion_date < start_date:
-                st.error(
-                    f"🔴 Token diperkirakan **sudah habis sejak {depletion_date.strftime('%d %B %Y')}** — sebelum rentang tanggal yang dipilih. "
-                    "Kemungkinan pelanggan sudah membeli token baru yang belum tercatat di data ini."
-                )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(
-                """
-                <div class="step-card">
-                    <div class="step-header">
-                        <div class="step-title"><span class="step-number">3</span> Grafik Proyeksi Sisa Token</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
             proj_df = build_projection(
                 current_balance, daily_rate, start_date, end_date, today
             )
@@ -405,36 +349,6 @@ if uploaded_file:
                 build_projection_chart(proj_df, depletion_date),
                 use_container_width=True,
             )
-            st.caption(
-                "Garis putus merah menandai titik saldo nol. Titik merah = perkiraan tanggal token habis."
-            )
-
-            with st.expander("📋 Lihat tabel proyeksi harian"):
-                st.dataframe(proj_df, use_container_width=True, hide_index=True)
-
-            with st.expander("🧾 Lihat riwayat pembelian token meter ini"):
-                st.dataframe(
-                    meter_df[
-                        [
-                            c
-                            for c in [
-                                "Tanggal Bayar",
-                                "Token",
-                                "Pem kWh",
-                                "Tarif",
-                                "Daya",
-                            ]
-                            if c in meter_df.columns
-                        ]
-                    ],
-                    use_container_width=True,
-                    hide_index=True,
-                )
 
     except Exception as e:
         st.error(f"Terjadi kesalahan saat memproses file: {str(e)}")
-
-else:
-    st.info(
-        "💡 **Petunjuk:** Silakan unggah file riwayat pembelian token di atas untuk memulai prediksi."
-    )
