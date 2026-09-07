@@ -58,31 +58,6 @@ MODULES = [
         "desc": "Buat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara massal dari data Excel.",
     },
     {
-        "no": 2, "file": "pages/2_Hitung_P2TL.py", "icon": "🧮",
-        "title": "Kalkulator Simulasi P2TL",
-        "desc": "Hitung perkiraan tagihan susulan P2TL berdasarkan golongan tarif, jam nyala, dan pemakaian.",
-    },
-    {
-        "no": 3, "file": "pages/3_Clean_Data_Excel.py", "icon": "🧹",
-        "title": "Validator & Cleaning Data Excel",
-        "desc": "Bersihkan data mentah AP2T: Format otomatis mata uang (Rp), IDPEL 12 digit, dan standarisasi.",
-    },
-    {
-        "no": 4, "file": "pages/4_Generator_QR.py", "icon": "📱",
-        "title": "Generator QR Code Validasi",
-        "desc": "Buat QR Code validasi dokumen/surat tugas secara otomatis yang dapat di-embed atau diunduh.",
-    },
-    {
-        "no": 5, "file": "pages/5_Kalkulator_Tambah_Daya.py", "icon": "⚡",
-        "title": "Kalkulator Tambah Daya (PB/NJ)",
-        "desc": "Hitung estimasi Biaya Penyambungan (BP), UJL, dan total biaya tambah daya pelanggan.",
-    },
-    {
-        "no": 6, "file": "pages/6_Deteksi_KWH_Macet.py", "icon": "🔎",
-        "title": "Deteksi kWh Macet",
-        "desc": "Deteksi stand meter yang tidak bergerak dari data DPP dan rekap status per pelanggan.",
-    },
-    {
         "no": 7, "file": "pages/7_Prediksi_Token_Prabayar.py", "icon": "🔋",
         "title": "Prediksi Sisa Token Prabayar",
         "desc": "Proyeksikan sisa token pelanggan prabayar dan rata-rata pemakaian harian dari riwayat pembelian.",
@@ -91,16 +66,6 @@ MODULES = [
         "no": 8, "file": "pages/8_Koreksi_Token_P2TL.py", "icon": "⚖️",
         "title": "Koreksi Token P2TL",
         "desc": "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah.",
-    },
-    {
-        "no": 9, "file": "pages/9_Kalkulator_Konversi_Listrik.py", "icon": "🔌",
-        "title": "Kalkulator Konversi Listrik",
-        "desc": "Konversi cepat Tegangan × Arus menjadi Daya (Watt) dan Energi (kWh) untuk perhitungan lapangan.",
-    },
-    {
-        "no": 10, "file": "pages/10_Kalkulator_Susut_Jaringan.py", "icon": "🕸️",
-        "title": "Kalkulator Susut Jaringan",
-        "desc": "Hitung persentase susut energi (kirim vs terjual) per feeder dan identifikasi indikasi susut non-teknis.",
     },
 ]
 
@@ -368,8 +333,8 @@ def render_header() -> None:
             <div class="header-status-chip"><span class="dot"></span> SISTEM AKTIF &middot; v2.6.0</div>
             <h1 class="header-title">⚡ Portal Operasional & Layanan Digital PLN</h1>
             <p class="header-subtitle">
-                Pusat otomasi kerja harian PLN: Pembuatan Surat Massal, P2TL, Validasi Excel,
-                QR Code Generator, Kalkulator Tambah Daya, Konversi Listrik, & Susut Jaringan — semua dalam satu platform.
+                Pusat otomasi kerja harian PLN: Generator Surat Massal, Prediksi Token Prabayar,
+                & Koreksi Token P2TL — semua dalam satu platform.
             </p>
         </div>
         """,
@@ -509,8 +474,8 @@ def render_footer() -> None:
             Aplikasi otomasi internal untuk mempercepat alur kerja harian pegawai:
             <ul style="color:#cbd5e1; font-size:0.9rem; padding-left:18px; margin-top:8px;">
                 <li>Generator Surat & Mail Merge (.DOCX / .PDF)</li>
-                <li>Kalkulator Simulasi P2TL & Tambah Daya</li>
-                <li>Validasi & Cleaning Data AP2T Excel</li>
+                <li>Prediksi Sisa Token Prabayar</li>
+                <li>Koreksi Token P2TL (Tagihan / Pengembalian)</li>
             </ul>
             """,
             unsafe_allow_html=True,
