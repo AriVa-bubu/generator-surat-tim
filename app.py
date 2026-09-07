@@ -67,6 +67,11 @@ MODULES = [
         "title": "Koreksi Token P2TL",
         "desc": "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah.",
     },
+    {
+        "no": 4, "file": "pages/9_Deteksi_KWH_Macet.py", "icon": "🔎",
+        "title": "Deteksi kWh Macet",
+        "desc": "Deteksi stand meter yang tidak bergerak dari data DPP dan rekap status per pelanggan.",
+    },
 ]
 
 
