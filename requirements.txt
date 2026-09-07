@@ -7,3 +7,5 @@ qrcode
 Pillow
 altair
 pypdf
+xlrd
+lxml

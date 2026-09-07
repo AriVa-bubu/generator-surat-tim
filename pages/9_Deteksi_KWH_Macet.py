@@ -27,9 +27,46 @@ def normalize_idpel(value) -> str:
 REQUIRED_COLUMNS = ["IDPEL", "BLTH REK", "SLALWBP", "SAHLWBP", "PEMKWH"]
 
 
+def read_sheets_robust(uploaded_file) -> dict:
+    """Baca file DPP dengan beberapa cara, karena export AP2T tidak selalu berupa
+    file Excel biner asli — kadang file ".xls" sebenarnya tabel HTML yang cuma
+    diberi ekstensi .xls (kebiasaan lama aplikasi berbasis web seperti AP2T)."""
+    raw_bytes = uploaded_file.getvalue()
+    filename = uploaded_file.name.lower()
+
+    errors = []
+
+    # 1. Coba baca sebagai file Excel asli (.xlsx modern)
+    try:
+        return pd.read_excel(io.BytesIO(raw_bytes), sheet_name=None, engine="openpyxl")
+    except Exception as e:
+        errors.append(f"openpyxl: {e}")
+
+    # 2. Coba baca sebagai file Excel lama (.xls biner)
+    if filename.endswith(".xls"):
+        try:
+            return pd.read_excel(io.BytesIO(raw_bytes), sheet_name=None, engine="xlrd")
+        except Exception as e:
+            errors.append(f"xlrd: {e}")
+
+    # 3. Fallback: kemungkinan besar ini tabel HTML yang diberi ekstensi .xls/.xlsx
+    #    (umum terjadi pada file export dari AP2T)
+    try:
+        tables = pd.read_html(io.BytesIO(raw_bytes))
+        if tables:
+            return {"Sheet1": tables[0]}
+    except Exception as e:
+        errors.append(f"read_html: {e}")
+
+    raise ValueError(
+        "Tidak bisa membaca file ini dengan format apa pun (Excel biner maupun tabel HTML). "
+        "Detail: " + " | ".join(errors)
+    )
+
+
 def load_and_prepare(uploaded_file) -> pd.DataFrame:
     """Baca semua sheet (bisa multi-pelanggan), gabungkan, dan siapkan kolom analisis."""
-    sheets = pd.read_excel(uploaded_file, sheet_name=None)
+    sheets = read_sheets_robust(uploaded_file)
     frames = []
     for sheet_name, sheet_df in sheets.items():
         sheet_df = clean_columns(sheet_df.copy())
