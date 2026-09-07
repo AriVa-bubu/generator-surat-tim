@@ -50,7 +50,6 @@ def read_sheets_robust(uploaded_file) -> dict:
             errors.append(f"xlrd: {e}")
 
     # 3. Fallback: kemungkinan besar ini tabel HTML yang diberi ekstensi .xls/.xlsx
-    #    (umum terjadi pada file export dari AP2T)
     try:
         tables = pd.read_html(io.BytesIO(raw_bytes))
         if tables:
@@ -59,28 +58,37 @@ def read_sheets_robust(uploaded_file) -> dict:
         errors.append(f"read_html: {e}")
 
     raise ValueError(
-        "Tidak bisa membaca file ini dengan format apa pun (Excel biner maupun tabel HTML). "
+        f"Gagal membaca file '{uploaded_file.name}'. Format tidak dikenali. "
         "Detail: " + " | ".join(errors)
     )
 
 
-def load_and_prepare(uploaded_file) -> pd.DataFrame:
-    """Baca semua sheet (bisa multi-pelanggan), gabungkan, dan siapkan kolom analisis."""
-    sheets = read_sheets_robust(uploaded_file)
-    frames = []
-    for sheet_name, sheet_df in sheets.items():
-        sheet_df = clean_columns(sheet_df.copy())
-        if not all(col in sheet_df.columns for col in REQUIRED_COLUMNS):
-            continue  # lewati sheet yang bukan format DPP
-        frames.append(sheet_df)
+def load_and_prepare_multiple(uploaded_files) -> pd.DataFrame:
+    """Baca semua file yang diunggah beserta seluruh sheet-nya, gabungkan, hapus duplikat,
+    dan siapkan kolom analisis."""
+    all_frames = []
 
-    if not frames:
+    for file in uploaded_files:
+        try:
+            sheets = read_sheets_robust(file)
+            for sheet_name, sheet_df in sheets.items():
+                sheet_df = clean_columns(sheet_df.copy())
+                if not all(col in sheet_df.columns for col in REQUIRED_COLUMNS):
+                    continue  # lewati sheet yang bukan format DPP
+                all_frames.append(sheet_df)
+        except Exception as e:
+            st.warning(f"⚠️ Dilewati: {e}")
+
+    if not all_frames:
         raise ValueError(
-            "Tidak ada sheet dengan format DPP yang valid. Pastikan ada kolom: "
+            "Tidak ada file/sheet dengan format DPP yang valid. Pastikan terdapat kolom wajib: "
             + ", ".join(REQUIRED_COLUMNS)
         )
 
-    df = pd.concat(frames, ignore_index=True)
+    # Gabungkan semua data dari multi-file
+    df = pd.concat(all_frames, ignore_index=True)
+
+    # Normalisasi IDPEL & Tanggal
     df["IDPEL"] = df["IDPEL"].apply(normalize_idpel)
     df = df[df["IDPEL"].notna()].copy()
 
@@ -89,6 +97,9 @@ def load_and_prepare(uploaded_file) -> pd.DataFrame:
 
     for col in ["SLALWBP", "SAHLWBP", "PEMKWH"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Hapus baris ganda jika ada data bulan/IDPEL yang tumpang tindih antar file
+    df = df.drop_duplicates(subset=["IDPEL", "BLTH REK"]).copy()
 
     df = df.sort_values(["IDPEL", "BLTH REK"]).reset_index(drop=True)
 
@@ -225,11 +236,11 @@ render_hero_banner(module_number=4, icon="🔎", title="Deteksi kWh Macet")
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(
         """
-        1. **Upload File Excel DPP** dari AP2T — boleh berisi 1 sheet (1 pelanggan) atau banyak sheet (banyak pelanggan sekaligus).
+        1. **Upload File Excel DPP (Bisa Pilih Banyak File Sekaligus)** — baik berisi 1 pelanggan per file/sheet maupun gabungan banyak pelanggan.
         2. Kolom wajib ada: `IDPEL`, `BLTH REK`, `SLALWBP`, `SAHLWBP`, `PEMKWH`.
         3. Sistem membandingkan **stand meter bulan ini vs bulan lalu** (bukan cuma cek pemakaian 0 kWh),
            karena kadang sistem tetap menagih pakai rata-rata walau meternya macet.
-        4. Hasil ditampilkan sebagai rekap status per pelanggan (fokus 6 bulan terakhir), grafik tren, dan bisa diunduh sebagai Excel.
+        4. Jika terdapat file dengan rentang bulan/pelanggan yang sama, sistem secara otomatis akan **menghapus duplikat data**.
         """
     )
 
@@ -248,15 +259,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-uploaded_file = st.file_uploader("Pilih file Excel DPP (.xlsx)", type=["xlsx", "xls"], key="dpp_uploader")
+uploaded_files = st.file_uploader(
+    "Pilih satu atau beberapa file Excel DPP (.xlsx / .xls)",
+    type=["xlsx", "xls"],
+    accept_multiple_files=True,
+    key="dpp_uploader",
+)
 
-if uploaded_file:
+if uploaded_files:
     try:
-        df = load_and_prepare(uploaded_file)
-        summary = summarize_per_customer(df)
+        with st.spinner(f"Memproses {len(uploaded_files)} file DPP..."):
+            df = load_and_prepare_multiple(uploaded_files)
+            summary = summarize_per_customer(df)
 
         if summary.empty:
-            st.warning("Tidak ada data pelanggan yang bisa dianalisis dari file ini.")
+            st.warning("Tidak ada data pelanggan yang bisa dianalisis dari file yang diunggah.")
         else:
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown("##### 📊 Ringkasan Keseluruhan")
@@ -267,7 +284,7 @@ if uploaded_file:
 
             k1, k2, k3 = st.columns(3)
             with k1:
-                st.markdown(kpi_card("👥", "Total Pelanggan Dianalisis", f"{total_pelanggan}", "IDPEL"), unsafe_allow_html=True)
+                st.markdown(kpi_card("👥", "Total Pelanggan Dianalisis", f"{total_pelanggan}", "IDPEL Unik"), unsafe_allow_html=True)
             with k2:
                 st.markdown(
                     kpi_card("🔴", "Sedang Macet Berlanjut", f"{macet_berlanjut}", "Perlu ditindaklanjuti"),
@@ -330,4 +347,4 @@ if uploaded_file:
         st.error(f"Terjadi kesalahan saat memproses file: {str(e)}")
 
 else:
-    st.info("💡 **Petunjuk:** Silakan unggah file Excel DPP di atas untuk memulai analisis.")
+    st.info("💡 **Petunjuk:** Silakan unggah satu atau beberapa file Excel DPP di atas untuk memulai analisis.")
