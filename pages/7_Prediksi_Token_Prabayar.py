@@ -115,7 +115,6 @@ def load_token_history(uploaded_file) -> pd.DataFrame:
 def compute_daily_rate_pln(
     meter_df: pd.DataFrame, window_days: int | None
 ) -> tuple[float, dt.datetime]:
-    """Menghitung rata-rata harian berbasis standar PLN (Total kWh / Rentang Hari Real)."""
     last_date = meter_df["Tanggal Bayar"].max()
 
     if window_days is not None:
@@ -127,10 +126,8 @@ def compute_daily_rate_pln(
     if len(window_df) > 1:
         first_trx = window_df["Tanggal Bayar"].min()
         last_trx = window_df["Tanggal Bayar"].max()
-        # Menggunakan selisih hari nyata antar transaksi awal dan akhir
         span_days = max((last_trx - first_trx).days, 1)
-        # Pada metode transaksi interval, kWh transaksi pertama dianggap deposit awal
-        total_kwh = window_df["Pem kWh"].iloc[1:].sum() if len(window_df) > 1 else window_df["Pem kWh"].sum()
+        total_kwh = window_df["Pem kWh"].iloc[1:].sum()
     else:
         span_days = 30
         total_kwh = window_df["Pem kWh"].sum()
@@ -284,11 +281,13 @@ if uploaded_file:
             )
 
             with c2:
+                # Key dinamis agar input box ter-update otomatis saat pilihan dropdown diubah
                 current_balance = st.number_input(
                     "Sisa Token Saat Ini (kWh):",
                     min_value=0.0,
                     value=float(est_balance),
                     step=1.0,
+                    key=f"input_balance_{selected_meter}_{window_option}",
                 )
 
             date_range = st.date_input(
