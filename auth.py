@@ -1,154 +1,112 @@
+"""
+Modul autentikasi sederhana untuk Portal Operasional PLN.
+
+Cara pakai:
+    from auth import check_login, render_logout_button
+
+    check_login()            # taruh di paling atas, setelah st.set_page_config()
+    render_logout_button()   # taruh di sidebar, bisa dipanggil kapan saja setelah login
+
+Password TIDAK disimpan sebagai teks polos di kode. Simpan hash-nya di
+file `.streamlit/secrets.toml` (lokal) atau di menu "Secrets" Streamlit
+Community Cloud (saat deploy). Lihat SECRETS_TEMPLATE di bawah untuk formatnya.
+"""
+
 import hashlib
+
 import streamlit as st
 
+SECRETS_TEMPLATE = """
+# .streamlit/secrets.toml
+# JANGAN commit file ini ke Git — tambahkan ke .gitignore
 
-def make_hash(password: str) -> str:
-    """Mengubah string password biasa menjadi kode Hash SHA-256."""
-    return hashlib.sha256(str.encode(password)).hexdigest()
+[credentials]
+admin = "GANTI_DENGAN_HASH_PASSWORD_ADMIN"
+operator1 = "GANTI_DENGAN_HASH_PASSWORD_OPERATOR"
+"""
 
 
-def check_login():
-    """Memeriksa status login dengan Full Background Gedung & Card Unified (Tanpa Form)."""
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
+def hash_password(password: str) -> str:
+    """Ubah password teks-biasa menjadi hash SHA-256 (hex)."""
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-    if st.session_state.logged_in:
-        return True
 
-    # Ambil data kredensial dari Streamlit Secrets
-    credentials = st.secrets.get("credentials", {})
+def _get_credentials() -> dict:
+    try:
+        return dict(st.secrets["credentials"])
+    except (KeyError, FileNotFoundError):
+        return {}
 
-    if not credentials:
-        st.warning(
-            "⚠️ Belum ada kredensial yang dikonfigurasi di Streamlit Secrets."
-        )
-        st.stop()
 
-    # CSS Custom: Menyatukan seluruh area kolom tengah menjadi 1 Kartu Kaca (Glassmorphism)
+def check_login() -> None:
+    """
+    Gerbang login. Jika user belum login, tampilkan form login dan
+    hentikan eksekusi halaman (st.stop()) sampai berhasil login.
+    """
+    if st.session_state.get("authenticated", False):
+        return
+
+    credentials = _get_credentials()
+
     st.markdown(
         """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+            html, body, [class*="css"] { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-            html, body, [class*="css"] {
-                font-family: 'Plus Jakarta Sans', sans-serif;
+            .login-card {
+                max-width: 420px;
+                margin: 60px auto 0 auto;
+                background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
+                border: 1px solid #2b3a52;
+                border-radius: 18px;
+                padding: 32px 32px 8px 32px;
+                box-shadow: 0 20px 40px -12px rgba(2, 132, 199, 0.35);
             }
-
-            /* Full Background Gambar Gedung */
-            .stApp {
-                background-size: cover !important;
-                background-position: center !important;
-                background-attachment: fixed !important;
-                background-image: linear-gradient(135deg, rgba(11, 15, 25, 0.82) 0%, rgba(9, 13, 22, 0.88) 100%),
-                                  url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
+            .login-title {
+                font-size: 1.4rem;
+                font-weight: 800;
+                color: #f8fafc;
+                margin-bottom: 4px;
             }
-
-            @media (prefers-color-scheme: light) {
-                .stApp {
-                    background-image: linear-gradient(135deg, rgba(248, 250, 252, 0.82) 0%, rgba(226, 232, 240, 0.88) 100%),
-                                      url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop") !important;
-                }
-            }
-
-            /* Efek Kartu Menyatu pada Kolom Tengah */
-            div[data-testid="column"]:nth-child(2) {
-                background: rgba(15, 23, 42, 0.75) !important;
-                backdrop-filter: blur(20px) !important;
-                -webkit-backdrop-filter: blur(20px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
-                border-radius: 24px !important;
-                padding: 40px 32px !important;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-            }
-
-            @media (prefers-color-scheme: light) {
-                div[data-testid="column"]:nth-child(2) {
-                    background: rgba(255, 255, 255, 0.85) !important;
-                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
-                }
-            }
-
-            /* Styling Logo PLN */
-            .pln-logo-wrapper {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin-bottom: 16px;
-            }
-
-            .pln-logo-img {
-                width: 65px;
-                height: auto;
-                object-fit: contain;
-                filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
-            }
-
-            /* Tombol Login Merah Coral */
-            .stButton > button {
-                background: linear-gradient(135deg, #ff4b4b 0%, #ff3b30 100%) !important;
-                border: none !important;
-                border-radius: 12px !important;
-                font-weight: 700 !important;
-                padding: 0.75rem 1.5rem !important;
-                font-size: 1rem !important;
-                color: white !important;
-                box-shadow: 0 10px 20px -5px rgba(255, 75, 75, 0.4) !important;
-                margin-top: 10px;
-            }
-
-            .stButton > button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 12px 24px -5px rgba(255, 75, 75, 0.6) !important;
+            .login-subtitle {
+                font-size: 0.9rem;
+                color: #94a3b8;
+                margin-bottom: 20px;
             }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
-
-    # Layout Terpusat (Centered 1 Kolom)
-    _, col_center, _ = st.columns([1, 1.2, 1])
-
-    with col_center:
-        # Logo PLN PNG Transparan
-        logo_url = (
-            "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png"
-        )
-
-        # Header (Logo + Judul + Subtitle)
+    _, center_col, _ = st.columns([1, 1.2, 1])
+    with center_col:
         st.markdown(
-            f"""
-            <div class="pln-logo-wrapper">
-                <img src="{logo_url}" class="pln-logo-img" alt="Logo PLN">
+            """
+            <div class="login-card">
+                <div class="login-title">🔒 Portal Operasional PLN</div>
+                <div class="login-subtitle">Masuk dengan akun yang terdaftar untuk melanjutkan.</div>
             </div>
-            <h2 style='text-align: center; margin-bottom: 4px; font-weight: 800;'>🔒 Selamat Datang</h2>
-            <p style='text-align: center; opacity: 0.8; font-size: 0.9rem; margin-bottom: 28px;'>Sistem Manajemen & Pelayanan Listrik PLN</p>
             """,
             unsafe_allow_html=True,
         )
 
-        # Input fields tanpa form
-        username = st.text_input("Username", placeholder="Masukkan username")
-        password = st.text_input(
-            "Password", type="password", placeholder="Masukkan password"
-        )
+        with st.form("login_form", clear_on_submit=False):
+            username = st.text_input("Username", placeholder="Masukkan username")
+            password = st.text_input("Password", type="password", placeholder="Masukkan password")
+            submitted = st.form_submit_button("🔑 Masuk", use_container_width=True, type="primary")
 
-        submit = st.button(
-            "🔑 Masuk ke Portal", type="primary", use_container_width=True
-        )
+        if not credentials:
+            st.warning(
+                "⚠️ Belum ada kredensial yang dikonfigurasi. Admin perlu mengisi "
+                "`st.secrets['credentials']` (lihat `auth.SECRETS_TEMPLATE`)."
+            )
 
-        if submit:
-            hashed_input = make_hash(password)
-            saved_pass = credentials.get(username)
-
-            if saved_pass and (
-                saved_pass == password or saved_pass == hashed_input
-            ):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success("Login berhasil! Mengalihkan...")
+        if submitted:
+            stored_hash = credentials.get(username.strip())
+            if stored_hash and stored_hash == hash_password(password):
+                st.session_state["authenticated"] = True
+                st.session_state["username"] = username.strip()
                 st.rerun()
             else:
                 st.error("❌ Username atau password salah.")
@@ -156,15 +114,58 @@ def check_login():
     st.stop()
 
 
-def render_logout_button():
-    """Menampilkan tombol logout di sidebar."""
-    if st.session_state.get("logged_in", False):
-        with st.sidebar:
-            st.markdown("---")
-            st.write(
-                "👤 Login sebagai: **"
-                f"{st.session_state.get('username', 'User').upper()}**"
-            )
-            if st.button("🚪 Keluar / Logout", use_container_width=True):
-                st.session_state.logged_in = False
-                st.rerun()
+def render_logout_button() -> None:
+    """Tampilkan info user & tombol logout di sidebar. Panggil setelah check_login()."""
+    if not st.session_state.get("authenticated", False):
+        return
+
+    with st.sidebar:
+        st.markdown(
+            """
+            <style>
+                section[data-testid="stSidebar"] .stButton > button {
+                    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+                    border: none !important;
+                    border-radius: 10px !important;
+                    font-weight: 700 !important;
+                    color: white !important;
+                    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+                }
+                section[data-testid="stSidebar"] .stButton > button:hover {
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 8px 16px -6px rgba(220, 38, 38, 0.5) !important;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        username = st.session_state.get("username", "-")
+        initial = username[:1].upper() if username else "?"
+
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:10px; padding:12px 14px;
+                        background: linear-gradient(160deg, #1e293b 0%, #172033 100%);
+                        border:1px solid #2b3a52; border-radius:12px; margin: 4px 0 10px 0;">
+                <div style="width:36px; height:36px; border-radius:50%; flex-shrink:0;
+                            background: linear-gradient(135deg, #0284c7, #0369a1);
+                            display:flex; align-items:center; justify-content:center;
+                            font-weight:800; color:white; font-size:0.95rem;">
+                    {initial}
+                </div>
+                <div style="line-height:1.3;">
+                    <div style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:0.03em;">
+                        Login sebagai
+                    </div>
+                    <div style="font-size:0.95rem; font-weight:700; color:#f8fafc;">
+                        {username}
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("🚪 Keluar / Logout", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()

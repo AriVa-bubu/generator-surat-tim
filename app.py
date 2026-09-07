@@ -321,6 +321,47 @@ def inject_custom_style() -> None:
                 border-top: 1px solid #1e293b;
                 margin-top: 8px;
             }
+
+            /* ---------- SIDEBAR ---------- */
+            section[data-testid="stSidebar"] {
+                background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+                border-right: 1px solid #1e293b;
+            }
+
+            section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] {
+                padding-top: 6px;
+            }
+
+            section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li {
+                margin-bottom: 2px;
+            }
+
+            section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a {
+                border-radius: 10px !important;
+                padding: 9px 14px !important;
+                margin: 0 8px !important;
+                color: #cbd5e1 !important;
+                font-weight: 600 !important;
+                font-size: 0.92rem !important;
+                transition: all 0.2s ease !important;
+            }
+
+            section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a:hover {
+                background: rgba(56, 189, 248, 0.12) !important;
+                color: #38bdf8 !important;
+                transform: translateX(3px);
+            }
+
+            section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a[aria-current="page"] {
+                background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+                color: white !important;
+                box-shadow: 0 4px 14px -4px rgba(2, 132, 199, 0.55);
+            }
+
+            section[data-testid="stSidebar"] hr {
+                border-color: #1e293b !important;
+                margin: 10px 8px !important;
+            }
         </style>
         """,
         unsafe_allow_html=True,
