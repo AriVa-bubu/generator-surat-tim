@@ -120,14 +120,22 @@ def compute_daily_rate(
     meter_df: pd.DataFrame, window_days: int | None
 ) -> tuple[float, dt.datetime]:
     last_date = meter_df["Tanggal Bayar"].max()
+    first_date_overall = meter_df["Tanggal Bayar"].min()
+    # Total rentang hari yang BENAR-BENAR ada datanya untuk meter ini.
+    total_history_days = max((last_date - first_date_overall).days, 1)
 
     if window_days is not None:
         start_window = last_date - pd.Timedelta(days=window_days)
         window_df = meter_df[meter_df["Tanggal Bayar"] >= start_window]
-        span_days = window_days
+        # PERBAIKAN: jangan paksa bagi dengan angka window (30/60/90/180)
+        # kalau riwayat transaksi yang tersedia lebih pendek dari window itu.
+        # Sebelumnya span_days selalu = window_days, sehingga kalau history
+        # cuma 15 hari tapi window dipilih 90 hari, rate jadi dibagi 90
+        # (bukan 15) -> rate terhitung jauh lebih kecil dari kenyataan.
+        span_days = min(window_days, total_history_days)
     else:
         window_df = meter_df
-        span_days = max((last_date - meter_df["Tanggal Bayar"].min()).days, 1)
+        span_days = total_history_days
 
     total_kwh = window_df["Pem kWh"].sum()
     rate = total_kwh / span_days if span_days > 0 else 0.0
