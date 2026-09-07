@@ -2,7 +2,6 @@ import datetime as dt
 import os
 
 import streamlit as st
-from PIL import Image
 
 from auth import check_login, render_logout_button
 from utils import load_custom_css
@@ -11,9 +10,8 @@ from utils import load_custom_css
 # KONFIGURASI HALAMAN
 # =============================================================================
 
-logo_icon = "⚡"
-if os.path.exists("logo_pln.png"):
-    logo_icon = Image.open("logo_pln.png")
+# Gunakan path file langsung jika ada, fallback ke emoji jika tidak ada
+logo_icon = "logo_pln.png" if os.path.exists("logo_pln.png") else "⚡"
 
 st.set_page_config(
     page_title="PLN - Portal Operasional Digital",
@@ -421,7 +419,6 @@ def render_module_search() -> None:
                 icon=m["icon"],
                 use_container_width=True,
             )
-            st.write("")
 
 
 def render_info_section() -> None:
@@ -551,4 +548,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main()gi
