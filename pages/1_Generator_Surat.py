@@ -109,14 +109,6 @@ st.set_page_config(
     layout="wide",
 )
 
-try:
-    from auth import check_login, render_logout_button
-
-    check_login()
-    render_logout_button()
-except ImportError:
-    pass
-
 st.markdown(
     """
     <style>
@@ -555,7 +547,7 @@ else:
         "💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word**"
         " di atas untuk membuka panel pengaturan."
     )
-    
+
     # -------------------------------------------------------------------------
     # PANEL PANDUAN / PETUNJUK PENGGUNAAN
     # -------------------------------------------------------------------------
