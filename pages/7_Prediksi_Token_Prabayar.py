@@ -8,15 +8,13 @@ import streamlit as st
 # HELPERS
 # =============================================================================
 
-
-
 COLUMN_ALIASES = {
-    "Nomer Meter": ["nomer meter", "no meter", "nomor meter", "no. meter"],
+    "Nomer Meter": ["nomer meter", "no meter", "nomor meter", "no. meter", "nokwh", "no kwh", "idpel"],
     "Token": ["token"],
-    "Pem kWh": ["pem kwh", "kwh", "jumlah kwh", "pembelian kwh"],
-    "Tarif": ["tarif"],
+    "Pem kWh": ["pem kwh", "kwh", "jumlah kwh", "pembelian kwh", "pemkwh"],
+    "Tarif": ["tarif", "tarip"],
     "Daya": ["daya"],
-    "Tanggal Bayar": ["tanggal bayar", "tgl bayar", "tanggal transaksi", "tgl transaksi"],
+    "Tanggal Bayar": ["tanggal bayar", "tgl bayar", "tanggal transaksi", "tgl transaksi", "tglbayar"],
 }
 REQUIRED_CANONICAL = ["Nomer Meter", "Pem kWh", "Tanggal Bayar"]
 
@@ -60,7 +58,7 @@ def load_token_history(uploaded_file) -> pd.DataFrame:
             raise ValueError("Tidak ada sheet dengan format riwayat token yang valid.")
         df = pd.concat(frames, ignore_index=True)
 
-    df["Nomer Meter"] = df["Nomer Meter"].astype(str).str.strip()
+    df["Nomer Meter"] = df["Nomer Meter"].astype(str).str.replace(",", "").str.strip()
     df["Pem kWh"] = pd.to_numeric(df["Pem kWh"], errors="coerce")
     df["Tanggal Bayar"] = pd.to_datetime(df["Tanggal Bayar"], errors="coerce")
 
