@@ -142,7 +142,7 @@ st.set_page_config(
 )
 
 apply_module_style()
-render_hero_banner(module_number=7, icon="🔋", title="Prediksi Sisa Token Prabayar")
+render_hero_banner(module_number=2, icon="🔋", title="Prediksi Sisa Token Prabayar")
 
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(

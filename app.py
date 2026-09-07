@@ -58,12 +58,12 @@ MODULES = [
         "desc": "Buat puluhan hingga ratusan surat resmi (.DOCX / .PDF) secara massal dari data Excel.",
     },
     {
-        "no": 7, "file": "pages/7_Prediksi_Token_Prabayar.py", "icon": "🔋",
+        "no": 2, "file": "pages/7_Prediksi_Token_Prabayar.py", "icon": "🔋",
         "title": "Prediksi Sisa Token Prabayar",
         "desc": "Proyeksikan sisa token pelanggan prabayar dan rata-rata pemakaian harian dari riwayat pembelian.",
     },
     {
-        "no": 8, "file": "pages/8_Koreksi_Token_P2TL.py", "icon": "⚖️",
+        "no": 3, "file": "pages/8_Koreksi_Token_P2TL.py", "icon": "⚖️",
         "title": "Koreksi Token P2TL",
         "desc": "Hitung kWh kurang tagih atau kelebihan tagih dan konversinya ke nominal token/Rupiah.",
     },
