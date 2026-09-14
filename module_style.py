@@ -149,6 +149,47 @@ MODULE_CSS = """
         box-shadow: 0 8px 18px -6px rgba(2, 132, 199, 0.45) !important;
     }
 
+    /* ---------- SIDEBAR ---------- */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+        border-right: 1px solid #1e293b;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] {
+        padding-top: 6px;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li {
+        margin-bottom: 2px;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a {
+        border-radius: 10px !important;
+        padding: 9px 14px !important;
+        margin: 0 8px !important;
+        color: #cbd5e1 !important;
+        font-weight: 600 !important;
+        font-size: 0.92rem !important;
+        transition: all 0.2s ease !important;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a:hover {
+        background: rgba(56, 189, 248, 0.12) !important;
+        color: #38bdf8 !important;
+        transform: translateX(3px);
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] a[aria-current="page"] {
+        background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+        color: white !important;
+        box-shadow: 0 4px 14px -4px rgba(2, 132, 199, 0.55);
+    }
+
+    section[data-testid="stSidebar"] hr {
+        border-color: #1e293b !important;
+        margin: 10px 8px !important;
+    }
+
     /* ---------- RESPONSIVE (HP / tablet) ---------- */
     @media (max-width: 640px) {
         .hero-banner { flex-direction: column; align-items: flex-start; padding: 18px 20px; }
@@ -170,17 +211,36 @@ def apply_module_style() -> None:
     st.markdown(MODULE_CSS, unsafe_allow_html=True)
 
 
-def render_hero_banner(module_number: int, icon: str, title: str, logo_path: str = "logo_pln.png") -> None:
-    """Render banner judul modul yang konsisten di semua halaman."""
+def render_hero_banner(
+    module_number: int,
+    icon: str,
+    title: str,
+    logo_path: str = "logo_pln.png",
+    bg_image_url: str | None = None,
+) -> None:
+    """Render banner judul modul yang konsisten di semua halaman.
+
+    bg_image_url (opsional): URL foto gedung/kantor untuk latar belakang banner.
+    Otomatis dikasih overlay gradasi gelap di atasnya supaya teks tetap terbaca.
+    """
     logo_base64 = _get_base64_of_bin_file(logo_path) if os.path.exists(logo_path) else ""
     logo_html = (
         f'<img src="data:image/png;base64,{logo_base64}" class="hero-logo-img" alt="PLN Logo">'
         if logo_base64
         else icon
     )
+
+    bg_style = ""
+    if bg_image_url:
+        bg_style = (
+            "background: linear-gradient(180deg, rgba(11,37,69,0.80), rgba(2,10,20,0.88)), "
+            f"url('{bg_image_url}') center/cover no-repeat !important; "
+            "background-blend-mode: normal !important;"
+        )
+
     st.markdown(
         f"""
-        <div class="hero-banner">
+        <div class="hero-banner" style="{bg_style}">
             <div>{logo_html}</div>
             <div>
                 <span class="hero-badge">MODUL {module_number}</span>

@@ -70,7 +70,10 @@ st.set_page_config(
 )
 
 apply_module_style()
-render_hero_banner(module_number=3, icon="⚖️", title="Koreksi Token P2TL (Tagihan / Pengembalian)")
+render_hero_banner(
+    module_number=3, icon="⚖️", title="Koreksi Token P2TL (Tagihan / Pengembalian)",
+    bg_image_url="https://images.unsplash.com/photo-1751009742861-79097d631b40?fm=jpg&q=70&w=1600&auto=format&fit=crop",
+)
 
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(

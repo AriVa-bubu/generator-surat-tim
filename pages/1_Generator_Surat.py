@@ -109,6 +109,14 @@ st.set_page_config(
     layout="wide",
 )
 
+try:
+    from auth import check_login, render_logout_button
+
+    check_login()
+    render_logout_button()
+except ImportError:
+    pass
+
 st.markdown(
     """
     <style>
@@ -248,7 +256,7 @@ logo_html = (
 
 st.markdown(
     f"""
-    <div class="hero-banner">
+    <div class="hero-banner" style="background: linear-gradient(180deg, rgba(11,37,69,0.80), rgba(2,10,20,0.88)), url('https://images.unsplash.com/photo-1758113353982-4c39ac9807ff?fm=jpg&q=70&w=1600&auto=format&fit=crop') center/cover no-repeat;">
         <div>{logo_html}</div>
         <div>
             <span class="hero-badge">MODUL 1</span>
@@ -258,6 +266,18 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
+    st.markdown(
+        """
+        1. **Upload File Excel**: Pastikan kolom header berada di baris paling atas.
+        2. **Upload Template Word**: Gunakan tag `{{ NAMA_KOLOM }}` di dalam file `.docx`.
+        3. **Penamaan File**: Pilih kolom yang jadi acuan penamaan tiap surat (misal `NAMA` atau `IDPEL`).
+        4. **Pengelompokan Sub-Folder**: Opsional — pilih kolom seperti `TANGGAL` atau `ULP` untuk kebutuhan penamaan internal.
+        5. **Output**: Sistem otomatis mengonversi setiap surat ke PDF lalu **menggabungkan semuanya jadi 1 file PDF multi-halaman** — satu surat, satu halaman.
+        6. **Cetak Langsung**: Setelah proses selesai, unduh PDF gabungan, atau klik tombol "Cetak Langsung" untuk membuka dialog print browser tanpa perlu unduh dulu.
+        """
+    )
 
 # =============================================================================
 # STEP 1 — UPLOAD
@@ -541,29 +561,8 @@ if excel_file and word_file:
     except Exception as e:
         st.error(f"Terjadi kesalahan sistem: {str(e)}")
 
-
 else:
     st.info(
         "💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word**"
         " di atas untuk membuka panel pengaturan."
     )
-
-    # -------------------------------------------------------------------------
-    # PANEL PANDUAN / PETUNJUK PENGGUNAAN
-    # -------------------------------------------------------------------------
-    st.markdown("<br>", unsafe_allow_html=True)
-    with st.expander("📖 **Panduan & Cara Penggunaan Aplikasi**", expanded=True):
-        st.markdown(
-            """
-            ### 🛠️ Langkah Penggunaan:
-            1. **Unggah Data Excel (`.xlsx`)**: Pastikan kolom header sesuai dengan nama variabel tag yang ada di template Word.
-            2. **Unggah Template Word (`.docx`)**: Format tag di template menggunakan kurung kurawal ganda, contoh: `{{ NAMA }}`, `{{ ALAMAT }}`.
-            3. **Atur Penamaan & Pengelompokan**: Pilih kolom acuan untuk penamaan file PDF yang dihasilkan.
-            4. **Generate & Unduh**: Klik tombol **Mulai Proses**, lalu unduh atau cetak langsung PDF gabungan yang telah dibuat.
-
-            ---
-            ⚠️ **Catatan Sistem:**
-            * Sistem akan mengambil **halaman pertama** dari setiap dokumen untuk memastikan format 1 surat = 1 halaman.
-            * Pastikan LibreOffice terpasang pada server hosting Anda untuk mendukung konversi `.docx` ke `.pdf`.
-            """
-        )

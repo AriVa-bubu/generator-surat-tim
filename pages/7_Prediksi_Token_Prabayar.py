@@ -9,7 +9,7 @@ except ImportError:
     def apply_module_style():
         pass
 
-    def render_hero_banner(module_number, icon, title):
+    def render_hero_banner(module_number, icon, title, bg_image_url=None):
         st.title(f"{icon} Modul {module_number}: {title}")
 
     def kpi_card(icon, label, value, subtext):
@@ -75,7 +75,10 @@ st.set_page_config(
 )
 
 apply_module_style()
-render_hero_banner(module_number=2, icon="🔋", title="Prediksi Sisa Token Prabayar")
+render_hero_banner(
+    module_number=2, icon="🔋", title="Prediksi Sisa Token Prabayar",
+    bg_image_url="https://images.unsplash.com/photo-1761937841713-6b43e3f50efa?fm=jpg&q=70&w=1600&auto=format&fit=crop",
+)
 
 with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
     st.markdown(
