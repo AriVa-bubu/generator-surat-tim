@@ -19,6 +19,30 @@ from docxtpl import DocxTemplate
 ILLEGAL_FILENAME_CHARS = re.compile(r'[\\/*?:"<>|]')
 NO_FOLDER_OPTION = "Tanpa Folder (1 Folder Utama)"
 
+# Folder tempat template .docx siap pakai disimpan. Taruh file template
+# kamu di sini (sejajar dengan app.py di root repo), lalu otomatis akan
+# muncul sebagai pilihan di dropdown "Pilih dari Template Tersedia".
+TEMPLATES_DIR = "templates"
+
+
+def list_available_templates(templates_dir: str) -> dict:
+    """Mengembalikan {nama_tampilan: path_file} untuk semua .docx di folder templates.
+
+    Nama tampilan diambil dari nama file tanpa ekstensi, underscore/dash
+    diganti spasi, dan huruf awal tiap kata dikapital agar rapi di dropdown.
+    """
+    if not os.path.isdir(templates_dir):
+        return {}
+
+    result = {}
+    for filename in sorted(os.listdir(templates_dir)):
+        if filename.lower().endswith(".docx") and not filename.startswith("~$"):
+            display_name = (
+                os.path.splitext(filename)[0].replace("_", " ").replace("-", " ").title()
+            )
+            result[display_name] = os.path.join(templates_dir, filename)
+    return result
+
 
 def get_base64_of_bin_file(bin_file: str) -> str:
     with open(bin_file, "rb") as f:
@@ -108,14 +132,6 @@ st.set_page_config(
     page_icon=logo_path if os.path.exists(logo_path) else "⚡",
     layout="wide",
 )
-
-try:
-    from auth import check_login, render_logout_button
-
-    check_login()
-    render_logout_button()
-except ImportError:
-    pass
 
 st.markdown(
     """
@@ -306,9 +322,40 @@ with col1:
 
 with col2:
     st.markdown("**📝 Template Surat (`.docx`)**")
-    word_file = st.file_uploader(
-        "Pilih template word", type=["docx"], key="word_uploader"
-    )
+
+    available_templates = list_available_templates(TEMPLATES_DIR)
+
+    if available_templates:
+        template_source = st.radio(
+            "Sumber Template:",
+            ["Pilih dari Template Tersedia", "Upload Template Baru"],
+            horizontal=True,
+            key="template_source",
+        )
+    else:
+        # Kalau folder templates/ kosong atau belum ada, langsung
+        # arahkan ke upload manual tanpa menampilkan pilihan radio.
+        template_source = "Upload Template Baru"
+
+    template_bytes = None
+    word_file = None
+
+    if template_source == "Pilih dari Template Tersedia":
+        selected_template_name = st.selectbox(
+            "Pilih template surat:",
+            options=list(available_templates.keys()),
+            key="preset_template_selector",
+        )
+        selected_template_path = available_templates[selected_template_name]
+        with open(selected_template_path, "rb") as f:
+            template_bytes = f.read()
+        st.caption(f"✓ Menggunakan template: `{os.path.basename(selected_template_path)}`")
+    else:
+        word_file = st.file_uploader(
+            "Pilih template word", type=["docx"], key="word_uploader"
+        )
+        if word_file is not None:
+            template_bytes = word_file.getvalue()
 
 
 def render_summary_cards(df: pd.DataFrame) -> None:
@@ -418,7 +465,7 @@ def render_docx_batch(
 # ALUR UTAMA
 # =============================================================================
 
-if excel_file and word_file:
+if excel_file and template_bytes:
     try:
         df = pd.read_excel(excel_file)
         df = df.apply(
@@ -448,8 +495,6 @@ if excel_file and word_file:
         )
 
         if generate_btn:
-            template_bytes = word_file.getvalue()
-
             with tempfile.TemporaryDirectory() as temp_dir:
                 # 1. Render seluruh dokumen DOCX
                 documents = render_docx_batch(
@@ -563,6 +608,6 @@ if excel_file and word_file:
 
 else:
     st.info(
-        "💡 **Petunjuk:** Silakan unggah **File Excel** dan **Template Word**"
-        " di atas untuk membuka panel pengaturan."
+        "💡 **Petunjuk:** Silakan unggah **File Excel**, lalu pilih atau"
+        " unggah **Template Surat** di atas untuk membuka panel pengaturan."
     )
