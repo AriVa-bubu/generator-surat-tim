@@ -40,12 +40,17 @@ def hitung_manual_sisa_token(
     tgl_diloss_akhir: dt.date,
 ) -> dict:
     lama_historis = max((tgl_bayar_akhir - tgl_bayar_awal).days, 0)
-    rata2_per_hari = (pem_kwh_historis / lama_historis) if lama_historis > 0 else 0.0
+
+    # kWh yang benar-benar terpakai selama periode acuan = total dibeli
+    # dikurangi sisa yang belum kepakai (Sisa Token Saat Ini).
+    kwh_terpakai_historis = pem_kwh_historis - sisa_saat_ini
+    rata2_per_hari = (kwh_terpakai_historis / lama_historis) if lama_historis > 0 else 0.0
 
     lama_diloss = max((tgl_diloss_akhir - tgl_diloss_awal).days, 0)
     total_pemakaian_diloss = rata2_per_hari * lama_diloss
 
-    sisa_akhir = sisa_saat_ini - total_pemakaian_diloss
+    BUFFER_PENGAMAN_KWH = 5
+    sisa_akhir = sisa_saat_ini - total_pemakaian_diloss - BUFFER_PENGAMAN_KWH
 
     # Margin error ±1% — estimasi ini linear (asumsi pemakaian rata harian konstan),
     # jadi hasil akhir realistiknya bisa meleset sedikit dari angka pasti.
@@ -55,6 +60,7 @@ def hitung_manual_sisa_token(
 
     return {
         "lama_historis": lama_historis,
+        "kwh_terpakai_historis": kwh_terpakai_historis,
         "rata2_per_hari": rata2_per_hari,
         "lama_diloss": lama_diloss,
         "total_pemakaian_diloss": total_pemakaian_diloss,
@@ -86,10 +92,14 @@ with st.expander("❓ **Petunjuk Penggunaan Sistem**"):
         1. **Sisa Token Saat Ini** — isi sisa saldo token pelanggan sekarang (kWh), dari hasil cek meter/AP2T.
         2. **Lama Diloss** — pilih rentang tanggal yang mau kamu cek (misalnya rentang perbaikan/pemadaman).
         3. **Pem kWh & Tgl Bayar** — isi total kWh yang dibeli pelanggan pada periode acuan, beserta rentang
-           tanggal pembelian pertama & terakhir pada periode itu. Dari sini sistem menghitung rata-rata pemakaian per hari.
-        4. Semua hasil (rata-rata/hari, total pemakaian selama diloss, sisa token akhir) **otomatis terhitung ulang**
-           setiap kamu ubah angka atau tanggal — tidak perlu tombol submit.
-        5. Hasil akhir ditampilkan dengan margin toleransi **±1%**, karena perhitungan ini memakai asumsi
+           tanggal pembelian pertama & terakhir pada periode itu.
+        4. **Rata-rata/hari** dihitung sebagai `(Pem kWh − Sisa Token Saat Ini) ÷ jumlah hari periode acuan` —
+           bukan cuma total kWh dibeli dibagi hari, karena sisa yang belum kepakai harus dikeluarkan dulu
+           supaya angka konsumsi hariannya akurat.
+        5. **Estimasi Sisa Token** akhir otomatis dikurangi **buffer pengaman 5 kWh**, supaya ada ruang aman
+           sebelum token benar-benar habis.
+        6. Semua hasil **otomatis terhitung ulang** setiap kamu ubah angka atau tanggal — tidak perlu tombol submit.
+        7. Hasil akhir ditampilkan dengan margin toleransi **±1%**, karena perhitungan ini memakai asumsi
            pemakaian rata-rata harian yang konstan (bukan pengukuran real-time).
         """
     )
@@ -152,7 +162,7 @@ else:
         )
     with k2:
         st.markdown(
-            kpi_card("📈", "Rata-rata / Hari", f"{hasil['rata2_per_hari']:.2f} kWh", "5️⃣ hasil bagi"),
+            kpi_card("📈", "Rata-rata / Hari", f"{hasil['rata2_per_hari']:.2f} kWh", "(Pem kWh − Sisa Token) ÷ hari"),
             unsafe_allow_html=True,
         )
     with k3:
@@ -177,7 +187,7 @@ else:
     with k5:
         st.markdown(
             kpi_card(
-                "🔋", "Estimasi Sisa Token", f"{hasil['sisa_akhir']:.2f} kWh",
+                "🔋", "Estimasi Sisa Token (sudah -5 kWh buffer)", f"{hasil['sisa_akhir']:.2f} kWh",
                 f"±1%: {hasil['batas_bawah']:.1f} – {hasil['batas_atas']:.1f} kWh",
             ),
             unsafe_allow_html=True,
